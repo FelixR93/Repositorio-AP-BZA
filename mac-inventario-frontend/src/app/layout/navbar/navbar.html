@@ -1,0 +1,27 @@
+<header class="nav">
+  <div class="left">
+    <div class="brand">
+      <div class="t1">BONANZA</div>
+      <div class="t2">EXPAUSA.SA • Inventario MAC</div>
+    </div>
+
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Dashboard</a>
+    <a routerLink="/inventory" routerLinkActive="active">Inventario</a>
+    <a routerLink="/inventory/global" routerLinkActive="active">Búsqueda Global</a>
+
+
+    <div class="dropdown">
+      <span class="drop-title">APs ▾</span>
+      <div class="drop-menu">
+        <button type="button" *ngFor="let ap of aps" (click)="goAp(ap)">{{ ap }}</button>
+      </div>
+    </div>
+
+    <a routerLink="/admin/users" routerLinkActive="active" *ngIf="user?.role === 'ADMIN'">Usuarios</a>
+  </div>
+
+  <div class="right">
+    <span class="user">{{ user?.fullName }} ({{ user?.role }})</span>
+    <button type="button" (click)="logout()">Salir</button>
+  </div>
+</header>

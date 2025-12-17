@@ -1,0 +1,142 @@
+<div class="page">
+  <div class="top">
+    <div>
+      <h2>Importar Excel — {{ apName }}</h2>
+      <div class="sub">
+        Sube un .xlsx para insertar nuevos registros. Los duplicados (MAC repetida) no se insertan y se reportan.
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button class="btn ghost" type="button" (click)="downloadTemplate()">Descargar plantilla</button>
+      <button class="btn ghost" type="button" (click)="back()">Volver</button>
+    </div>
+  </div>
+
+  <div class="card uploader">
+    <div class="u-head">
+      <div class="u-title">Archivo Excel (.xlsx)</div>
+      <div class="u-hint">Recomendado: usa “Exportar Excel” como base y agrega tus filas.</div>
+    </div>
+
+    <div class="u-body">
+      <input type="file" accept=".xlsx" (change)="onFileChange($event)" />
+
+      <div class="file" *ngIf="file">
+        <div class="f-name">{{ file.name }}</div>
+        <div class="f-meta">{{ (file.size / 1024) | number:'1.0-0' }} KB</div>
+      </div>
+
+      <button class="btn" type="button" (click)="upload()" [disabled]="uploading || !file">
+        {{ uploading ? 'Importando…' : 'Importar' }}
+      </button>
+
+      <div class="err" *ngIf="error">{{ error }}</div>
+    </div>
+  </div>
+
+  <!-- RESULTADOS -->
+  <div class="card result" *ngIf="result">
+    <div class="r-top">
+      <div class="r-title">Resultado de importación</div>
+      <div class="r-badge">OK</div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="k">Total filas</div>
+        <div class="v">{{ result.summary.totalRows }}</div>
+      </div>
+      <div class="kpi">
+        <div class="k">Válidas</div>
+        <div class="v">{{ result.summary.parsedValid }}</div>
+      </div>
+      <div class="kpi">
+        <div class="k">Insertadas</div>
+        <div class="v ok">{{ result.summary.inserted }}</div>
+      </div>
+      <div class="kpi">
+        <div class="k">Duplicadas</div>
+        <div class="v warn">{{ result.summary.duplicates }}</div>
+      </div>
+      <div class="kpi">
+        <div class="k">Fallidas</div>
+        <div class="v bad">{{ result.summary.failed }}</div>
+      </div>
+    </div>
+
+    <!-- Duplicados -->
+    <div class="section" *ngIf="result.duplicates.length">
+      <div class="section-title">Duplicados (no insertados)</div>
+
+      <div class="table">
+        <table>
+          <thead>
+            <tr>
+              <th>MAC</th>
+              <th>Detalle</th>
+              <th>Existente</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of result.duplicates">
+              <td class="mono">{{ d.mac }}</td>
+              <td>{{ d.message }}</td>
+              <td class="muted">
+                {{ d.existing?.apName }} • {{ d.existing?.locationPoint }} • {{ d.existing?.ownerName }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Fallidos -->
+    <div class="section" *ngIf="result.failed.length">
+      <div class="section-title">Fallidos (errores por fila)</div>
+
+      <div class="table">
+        <table>
+          <thead>
+            <tr>
+              <th>Errores</th>
+              <th>Fila</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of result.failed">
+              <td class="bad">
+                <div *ngFor="let e of f.errors">• {{ e }}</div>
+              </td>
+              <td class="mono muted">{{ f.row | json }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Insertadas -->
+    <div class="section" *ngIf="result.inserted.length">
+      <div class="section-title">Insertadas</div>
+
+      <div class="table">
+        <table>
+          <thead>
+            <tr>
+              <th>MAC</th>
+              <th>AP</th>
+              <th>Registrado por</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let i of result.inserted">
+              <td class="mono">{{ i.mac }}</td>
+              <td>{{ i.apName }}</td>
+              <td>{{ importUserName }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

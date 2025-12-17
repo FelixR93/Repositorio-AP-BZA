@@ -1,0 +1,11 @@
+.shell{
+  min-height: 100vh;
+  display:flex;
+  flex-direction:column;
+}
+.content{
+  flex:1;
+  padding: 16px 18px;
+  background: #0b1020;
+  color: #eaf0ff;
+}

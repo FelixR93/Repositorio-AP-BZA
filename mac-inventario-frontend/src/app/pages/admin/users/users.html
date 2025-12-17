@@ -1,0 +1,166 @@
+<div class="page">
+  <div class="top">
+    <div>
+      <h2>Usuarios</h2>
+      <div class="sub">Gestión de accesos (solo ADMIN). Activa/desactiva, edita o elimina.</div>
+    </div>
+
+    <div class="top-actions">
+      <input class="search" [(ngModel)]="q" placeholder="Buscar por nombre, usuario o rol…" />
+      <button class="btn ghost" type="button" (click)="load()">Actualizar</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="card info">Cargando…</div>
+  <div *ngIf="!loading && error" class="card err">{{ error }}</div>
+
+  <div class="grid" *ngIf="!loading">
+    <!-- Crear -->
+    <div class="card">
+      <div class="title">Crear usuario</div>
+
+      <div class="row">
+        <div class="field">
+          <label>Nombre completo</label>
+          <input [(ngModel)]="createForm.fullName" placeholder="Ej: Carlos Sánchez" />
+        </div>
+        <div class="field">
+          <label>Usuario</label>
+          <input [(ngModel)]="createForm.username" placeholder="Ej: csanchez" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Contraseña</label>
+          <input [(ngModel)]="createForm.password" type="password" placeholder="********" />
+        </div>
+        <div class="field">
+          <label>Rol</label>
+          <select [(ngModel)]="createForm.role">
+            <option [ngValue]="'USER'">USER</option>
+            <option [ngValue]="'ADMIN'">ADMIN</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn" type="button" (click)="create()" [disabled]="creating">
+        {{ creating ? 'Creando…' : 'Crear usuario' }}
+      </button>
+    </div>
+
+    <!-- Listado -->
+    <div class="card">
+      <div class="title">Listado</div>
+
+      <div *ngIf="filtered.length === 0" class="muted">No hay usuarios.</div>
+
+      <div class="table" *ngIf="filtered.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th class="right">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let u of filtered">
+              <td>{{ u.fullName }}</td>
+              <td class="mono">{{ u.username }}</td>
+              <td><span class="tag">{{ u.role }}</span></td>
+
+              <td>
+                <span class="pill" [class.off]="!(u.isActive ?? true)">
+                  {{ (u.isActive ?? true) ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+
+              <td class="right actions">
+                <button class="btn tiny ghost" type="button" (click)="toggleActive(u)">
+                  {{ (u.isActive ?? true) ? 'Desactivar' : 'Activar' }}
+                </button>
+                <button class="btn tiny ghost" type="button" (click)="openEdit(u)">Editar</button>
+                <button class="btn tiny danger" type="button" (click)="openDelete(u)">Eliminar</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR -->
+  <div class="modal-backdrop" *ngIf="editOpen" (click)="closeEdit()"></div>
+
+  <div class="modal" *ngIf="editOpen">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-title">Editar usuario</div>
+
+      <div class="modal-body">
+        <div class="row">
+          <div class="field">
+            <label>Nombre completo</label>
+            <input [(ngModel)]="editForm.fullName" />
+          </div>
+          <div class="field">
+            <label>Usuario</label>
+            <input [(ngModel)]="editForm.username" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Rol</label>
+            <select [(ngModel)]="editForm.role">
+              <option [ngValue]="'USER'">USER</option>
+              <option [ngValue]="'ADMIN'">ADMIN</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Nueva contraseña (opcional)</label>
+            <input [(ngModel)]="editForm.password" type="password" placeholder="Deja vacío para no cambiar" />
+          </div>
+        </div>
+
+        <div class="err mini" *ngIf="editError">{{ editError }}</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn ghost" type="button" (click)="closeEdit()" [disabled]="savingEdit">Cancelar</button>
+        <button class="btn" type="button" (click)="saveEdit()" [disabled]="savingEdit">
+          {{ savingEdit ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ELIMINAR -->
+  <div class="modal-backdrop" *ngIf="deleteOpen" (click)="closeDelete()"></div>
+
+  <div class="modal" *ngIf="deleteOpen">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-title">Confirmar eliminación</div>
+
+      <div class="modal-body">
+        ¿Eliminar al usuario:
+        <div class="mono big">{{ deleteTarget?.username }}</div>
+        <div class="muted">Nombre: <b>{{ deleteTarget?.fullName }}</b> • Rol: <b>{{ deleteTarget?.role }}</b></div>
+
+        <div class="err mini" *ngIf="deleteError">{{ deleteError }}</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn ghost" type="button" (click)="closeDelete()" [disabled]="deleting">Cancelar</button>
+        <button class="btn danger" type="button" (click)="confirmDelete()" [disabled]="deleting">
+          {{ deleting ? 'Eliminando…' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

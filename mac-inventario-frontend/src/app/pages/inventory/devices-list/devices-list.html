@@ -1,0 +1,110 @@
+<div class="page">
+  <div class="top">
+    <div>
+      <h2>Inventario — {{ titleLabel() }}</h2>
+      <div class="sub">
+        Visualización general (todos ven lo mismo). Cada registro muestra quién lo creó.
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button class="btn ghost" type="button" (click)="importExcel()">Importar Excel</button>
+      <button class="btn ghost" type="button" (click)="exportExcel()">Exportar Excel</button>
+      <button class="btn" type="button" (click)="newDevice()">+ Nuevo</button>
+    </div>
+  </div>
+
+  <div class="filters card">
+    <div class="search">
+      <input [(ngModel)]="q" placeholder="Buscar por MAC, nombre, punto o registrado por…" />
+      <button class="btn" type="button" (click)="search()">Buscar</button>
+      <button class="btn ghost" type="button" (click)="clear()">Limpiar</button>
+    </div>
+
+    <div class="meta">
+      <div class="pill">Registros: <b>{{ devices.length }}</b></div>
+      <div class="pill">Página: <b>{{ page }}</b> / {{ totalPages }}</div>
+
+      <div class="pill">
+        Ver:
+        <select [(ngModel)]="pageSize" (ngModelChange)="page=1">
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="20">20</option>
+          <option [ngValue]="50">50</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading card">Cargando inventario…</div>
+
+  <div *ngIf="!loading && devices.length === 0" class="empty card">
+    No hay registros.
+  </div>
+
+  <div *ngIf="!loading && devices.length > 0" class="table card">
+    <table>
+      <thead>
+        <tr>
+          <th (click)="setSort('createdAt')">Fecha</th>
+          <th (click)="setSort('ownerName')">Usuario (Dueño)</th>
+          <th (click)="setSort('mac')">MAC</th>
+          <th (click)="setSort('deviceType')">Tipo</th>
+          <th (click)="setSort('area')">Área</th>
+          <th (click)="setSort('locationPoint')">Punto</th>
+          <th (click)="setSort('registeredByName')">Registrado por</th>
+          <th class="right">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let d of paged">
+          <td class="mono">{{ d.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ d.ownerName }}</td>
+          <td class="mono">{{ d.mac }}</td>
+          <td><span class="tag">{{ d.deviceType }}</span></td>
+          <td><span class="tag soft">{{ d.area }}</span></td>
+          <td>{{ d.locationPoint }}</td>
+          <td>{{ d.registeredByName || 'N/D' }}</td>
+
+          <td class="right actions">
+            <button class="btn tiny ghost" type="button" (click)="edit(d)">Editar</button>
+            <button class="btn tiny danger" type="button" (click)="openDelete(d)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pager">
+      <button class="btn ghost" type="button" (click)="prev()" [disabled]="page<=1">← Anterior</button>
+      <div class="pager-info">Página <b>{{ page }}</b> de {{ totalPages }}</div>
+      <button class="btn ghost" type="button" (click)="next()" [disabled]="page>=totalPages">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- MODAL ELIMINAR -->
+  <div class="modal-backdrop" *ngIf="confirmOpen" (click)="closeDelete()"></div>
+
+  <div class="modal" *ngIf="confirmOpen">
+    <div class="modal-card">
+      <div class="modal-title">Confirmar eliminación</div>
+
+      <div class="modal-body">
+        ¿Deseas eliminar la MAC:
+        <div class="mono big">{{ toDelete?.mac }}</div>
+        <div class="muted">
+          AP: <b>{{ toDelete?.apName }}</b> • Punto: <b>{{ toDelete?.locationPoint }}</b>
+        </div>
+
+        <div class="merr" *ngIf="modalError">{{ modalError }}</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn ghost" type="button" (click)="closeDelete()" [disabled]="deleting">Cancelar</button>
+        <button class="btn danger" type="button" (click)="confirmDelete()" [disabled]="deleting">
+          {{ deleting ? 'Eliminando…' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

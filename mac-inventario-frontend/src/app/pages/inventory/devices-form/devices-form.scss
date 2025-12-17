@@ -1,0 +1,266 @@
+.page{ padding: 14px 16px; }
+
+.top{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+h2{ margin:0; font-weight: 950; letter-spacing: .3px; }
+.sub{ margin-top:6px; opacity:.72; font-size:12px; }
+
+.top-actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+
+.card{
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 16px 50px rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+}
+
+.loading{ opacity:.85; }
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-card{ min-height: 260px; }
+
+.section-title{
+  font-weight: 950;
+  letter-spacing: .3px;
+  margin-bottom: 12px;
+}
+
+.row{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.field label{
+  display:block;
+  font-size: 12px;
+  opacity: .85;
+  margin-bottom: 6px;
+}
+
+input, select, textarea{
+  width:100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.25);
+  color:#eaf0ff;
+  outline: none;
+}
+input:focus, select:focus, textarea:focus{
+  border-color: rgba(79,155,255,.55);
+  box-shadow: 0 0 0 3px rgba(79,155,255,.18);
+}
+
+textarea{ resize: vertical; }
+
+.hint{
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: .70;
+}
+
+.btn{
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 950;
+  background: rgba(79,155,255,.92);
+  color: #061022;
+}
+.btn:disabled{ opacity:.65; cursor:not-allowed; }
+
+.btn.ghost{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color:#eaf0ff;
+}
+
+.msg{
+  grid-column: 1 / -1;
+  opacity: .95;
+}
+.msg.error{
+  background: rgba(255,80,80,.12);
+  border: 1px solid rgba(255,120,120,.18);
+  color: #FFD0D0;
+}
+.msg.ok{
+  background: rgba(80,255,160,.10);
+  border: 1px solid rgba(120,255,190,.18);
+  color: #D9FFE9;
+}
+
+/* Responsive */
+@media (max-width: 950px){
+  .grid{ grid-template-columns: 1fr; }
+  .row{ grid-template-columns: 1fr; }
+}
+
+/* ✅ Evita desbordes por padding/border */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.page{ padding: 14px 16px; }
+
+/* ✅ Evita overflow horizontal */
+.page, .card, .grid, .row { max-width: 100%; }
+.page { overflow-x: hidden; }
+
+.top{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+h2{ margin:0; font-weight: 950; letter-spacing: .3px; }
+.sub{ margin-top:6px; opacity:.72; font-size:12px; }
+
+.top-actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+
+.card{
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 16px 50px rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+
+  /* ✅ si algo se pasa, no rompe layout */
+  overflow: hidden;
+}
+
+.loading{ opacity:.85; }
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  /* ✅ CRÍTICO en CSS grid: permite encoger contenido */
+  min-width: 0;
+}
+
+/* ✅ El card debe permitir que el contenido se ajuste */
+.form-card{
+  min-height: 260px;
+  min-width: 0;
+}
+
+.section-title{
+  font-weight: 950;
+  letter-spacing: .3px;
+  margin-bottom: 12px;
+}
+
+.row{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+
+  /* ✅ CRÍTICO: evita que inputs empujen el grid */
+  min-width: 0;
+}
+
+/* ✅ Cada columna puede encoger */
+.field{
+  min-width: 0;
+}
+
+.field label{
+  display:block;
+  font-size: 12px;
+  opacity: .85;
+  margin-bottom: 6px;
+}
+
+/* ✅ Inputs siempre dentro del contenedor */
+input, select, textarea{
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.25);
+  color:#eaf0ff;
+  outline: none;
+
+  /* ✅ evita overflow raro en inputs largos */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+input:focus, select:focus, textarea:focus{
+  border-color: rgba(79,155,255,.55);
+  box-shadow: 0 0 0 3px rgba(79,155,255,.18);
+}
+
+textarea{
+  resize: vertical;
+}
+
+.hint{
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: .70;
+}
+
+.btn{
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 950;
+  background: rgba(79,155,255,.92);
+  color: #061022;
+}
+.btn:disabled{ opacity:.65; cursor:not-allowed; }
+
+.btn.ghost{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color:#eaf0ff;
+}
+
+.msg{
+  grid-column: 1 / -1;
+  opacity: .95;
+}
+.msg.error{
+  background: rgba(255,80,80,.12);
+  border: 1px solid rgba(255,120,120,.18);
+  color: #FFD0D0;
+}
+.msg.ok{
+  background: rgba(80,255,160,.10);
+  border: 1px solid rgba(120,255,190,.18);
+  color: #D9FFE9;
+}
+
+/* Responsive */
+@media (max-width: 950px){
+  .grid{ grid-template-columns: 1fr; }
+  .row{ grid-template-columns: 1fr; }
+}

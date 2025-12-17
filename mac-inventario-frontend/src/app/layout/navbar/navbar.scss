@@ -1,0 +1,81 @@
+.nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap: 14px;
+  padding: 14px 18px;
+  background:#070a14;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  color:#eaf0ff;
+}
+
+.left{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+}
+
+.brand .t1{ font-weight:800; letter-spacing:.6px; }
+.brand .t2{ font-size:12px; opacity:.75; margin-top:2px; }
+
+a{
+  color:#eaf0ff;
+  text-decoration:none;
+  padding:8px 10px;
+  border-radius:10px;
+  opacity:.9;
+}
+a.active, a:hover{
+  background: rgba(255,255,255,.08);
+}
+
+.right{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+.user{ font-size:12px; opacity:.85; }
+
+button{
+  border:none;
+  padding:8px 12px;
+  border-radius:10px;
+  background: rgba(79,155,255,.85);
+  color:#08101f;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.dropdown{
+  position:relative;
+}
+.drop-title{
+  padding:8px 10px;
+  border-radius:10px;
+  background: rgba(255,255,255,.06);
+  cursor:default;
+}
+.drop-menu{
+  display:none;
+  position:absolute;
+  top:38px;
+  left:0;
+  min-width:180px;
+  background:#0b1020;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 16px 40px rgba(0,0,0,.45);
+}
+.dropdown:hover .drop-menu{ display:block; }
+.drop-menu button{
+  width:100%;
+  text-align:left;
+  background:transparent;
+  color:#eaf0ff;
+  padding:10px 12px;
+  border-radius:0;
+}
+.drop-menu button:hover{
+  background: rgba(255,255,255,.08);
+}

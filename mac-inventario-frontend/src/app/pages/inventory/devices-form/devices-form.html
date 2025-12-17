@@ -1,0 +1,104 @@
+<div class="page">
+  <div class="top">
+    <div>
+      <h2>{{ isEdit ? 'Editar registro' : 'Nuevo registro' }} — {{ apName }}</h2>
+      <div class="sub">
+        {{ isEdit ? 'Actualiza la información del dispositivo.' : 'Registra un dispositivo en el AP seleccionado.' }}
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button class="btn ghost" type="button" (click)="cancel()">Volver</button>
+      <button class="btn" type="button" (click)="save()" [disabled]="saving || loading">
+        {{ saving ? 'Guardando…' : (isEdit ? 'Guardar cambios' : 'Guardar') }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="card loading">Cargando registro…</div>
+
+  <div *ngIf="!loading" class="grid">
+    <div class="card form-card">
+      <div class="section-title">Información principal</div>
+
+      <div class="row">
+        <div class="field">
+          <label>AP</label>
+          <!-- En creación: fijo por ruta. En edición: mostramos el valor y dejamos editable si quieres -->
+          <input [(ngModel)]="form.apName" name="apName" [disabled]="!isEdit" />
+          <div class="hint">En “Nuevo”, el AP se define por la pestaña seleccionada.</div>
+        </div>
+
+        <div class="field">
+          <label>Nombre (Dueño del equipo)</label>
+          <input [(ngModel)]="form.ownerName" name="ownerName" placeholder="Ej: Juan Pérez" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>MAC</label>
+          <input [(ngModel)]="form.mac" name="mac" placeholder="AA:BB:CC:DD:EE:FF" />
+          <div class="hint">Se normaliza automáticamente a formato AA:BB:CC:DD:EE:FF</div>
+        </div>
+
+        <div class="field">
+          <label>Punto / Ubicación</label>
+          <input [(ngModel)]="form.locationPoint" name="locationPoint" placeholder="Ej: Garita 1 / Oficina Control" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Tipo de dispositivo</label>
+          <select [(ngModel)]="form.deviceType" name="deviceType">
+            <option *ngFor="let t of deviceTypes" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Área</label>
+          <select [(ngModel)]="form.area" name="area">
+            <option *ngFor="let a of areas" [value]="a">{{ a }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card form-card">
+      <div class="section-title">Información opcional</div>
+
+      <div class="row">
+        <div class="field">
+          <label>Marca</label>
+          <input [(ngModel)]="form.brand" name="brand" placeholder="Ej: Samsung / Dell" />
+        </div>
+
+        <div class="field">
+          <label>Modelo</label>
+          <input [(ngModel)]="form.model" name="model" placeholder="Ej: A52 / Latitude 5420" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Serial</label>
+          <input [(ngModel)]="form.serial" name="serial" />
+        </div>
+
+        <div class="field">
+          <label>Hostname</label>
+          <input [(ngModel)]="form.hostname" name="hostname" placeholder="Ej: PC-CONTROL-01" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Notas</label>
+        <textarea [(ngModel)]="form.notes" name="notes" rows="4" placeholder="Observaciones…"></textarea>
+      </div>
+    </div>
+
+    <div *ngIf="error" class="card msg error">{{ error }}</div>
+    <div *ngIf="success" class="card msg ok">{{ success }}</div>
+  </div>
+</div>

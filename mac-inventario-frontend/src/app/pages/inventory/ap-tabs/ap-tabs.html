@@ -1,0 +1,17 @@
+<div class="page">
+  <div class="top">
+    <div>
+      <h2>Inventario</h2>
+      <div class="sub">Selecciona un AP para administrar registros o usa Búsqueda Global.</div>
+    </div>
+
+    <button class="btn" type="button" (click)="goGlobal()">Búsqueda Global</button>
+  </div>
+
+  <div class="grid">
+    <button class="card" type="button" *ngFor="let ap of aps" (click)="goAp(ap)">
+      <div class="t">{{ ap }}</div>
+      <div class="s">Abrir inventario del AP</div>
+    </button>
+  </div>
+</div>

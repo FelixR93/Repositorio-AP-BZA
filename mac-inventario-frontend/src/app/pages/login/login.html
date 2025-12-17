@@ -1,0 +1,155 @@
+<div class="login-stage">
+  <!-- Background system layers -->
+  <div class="bg-grid"></div>
+  <div class="bg-scanlines"></div>
+  <div class="bg-noise"></div>
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+
+  <!-- HUD Loader -->
+  <div class="hud-overlay" *ngIf="loading">
+    <div class="hud-box">
+      <div class="hud-top">
+        <div class="hud-brand">SISTEMA BONANZA</div>
+        <div class="hud-tag">EXPAUSA.SA</div>
+      </div>
+
+      <div class="hud-sub">{{ hudText }}</div>
+
+      <div class="hud-bar">
+        <div class="hud-bar-fill" [style.width.%]="hudProgress"></div>
+        <div class="hud-bar-glow"></div>
+      </div>
+
+      <div class="hud-log">
+        <div class="line">● Módulo seguridad: OK</div>
+        <div class="line">● Servicio autenticación: ONLINE</div>
+        <div class="line">● Cargando perfil y permisos…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-wrap">
+        <img class="logo" [src]="logoSrc" (error)="onLogoError()" alt="Bonanza" />
+        <div class="logo-glow"></div>
+      </div>
+
+      <div class="brand-txt">
+        <div class="company">EXPORTADORA AURÍFERA BONANZA</div>
+        <div class="sub">(EXPAUSA.SA) — Sistema de Inventario MAC</div>
+      </div>
+    </div>
+
+    <div class="top-meta">
+      <div class="meta-pill">Uso interno</div>
+      <div class="meta-pill">Control • Seguridad • Monitoreo</div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="wrap">
+    <section
+      class="card-3d enter"
+      #card
+      (mousemove)="onMove($event, card)"
+      (mouseleave)="onLeave()"
+      [style.--rx]="tiltX + 'deg'"
+      [style.--ry]="tiltY + 'deg'"
+      [style.--gx]="glowX + '%'"
+      [style.--gy]="glowY + '%'"
+      [style.--px]="px"
+      [style.--py]="py"
+    >
+      <!-- Holo border -->
+      <div class="holo-border"></div>
+
+      <!-- Glass surface -->
+      <div class="card-surface">
+        <div class="header layer">
+          <div>
+            <div class="title">Acceso al sistema</div>
+            <div class="subtitle">Inventario centralizado por AP • Auditoría y control</div>
+          </div>
+
+          <div class="chip">
+            <span class="dot"></span>
+            <span>ONLINE</span>
+          </div>
+        </div>
+
+        <form class="form layer" (ngSubmit)="onSubmit()">
+          <div class="field">
+            <label>Usuario</label>
+            <div class="input-wrap">
+              <span class="icon">👤</span>
+              <input
+                name="username"
+                [(ngModel)]="username"
+                autocomplete="username"
+                placeholder="Ej: admin"
+                [disabled]="loading"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Contraseña</label>
+            <div class="input-wrap">
+              <span class="icon">🔒</span>
+              <input
+                name="password"
+                [(ngModel)]="password"
+                [type]="showPass ? 'text' : 'password'"
+                autocomplete="current-password"
+                placeholder="••••••••"
+                [disabled]="loading"
+              />
+              <button class="eye" type="button" (click)="togglePass()" [disabled]="loading">
+                {{ showPass ? 'Ocultar' : 'Mostrar' }}
+              </button>
+            </div>
+          </div>
+
+          <button class="btn" type="submit" [disabled]="loading">
+            <span class="btn-txt">{{ loading ? 'Ingresando…' : 'Ingresar' }}</span>
+            <span class="btn-holo"></span>
+          </button>
+
+          <div class="err" *ngIf="error">
+            {{ error }}
+          </div>
+
+          <div class="hint">
+            Acceso autorizado. Uso interno — Bonanza (EXPAUSA.SA).<br />
+            Cualquier registro queda asociado al usuario que lo crea.
+          </div>
+        </form>
+
+        <div class="hud-mini layer">
+          <div class="mini">
+            <div class="k">Servidor</div>
+            <div class="v">localhost:4000</div>
+          </div>
+          <div class="mini">
+            <div class="k">Modo</div>
+            <div class="v">Seguro</div>
+          </div>
+          <div class="mini">
+            <div class="k">Versión</div>
+            <div class="v">v1.0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-glow"></div>
+      <div class="card-shadow"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    © {{ year }} Bonanza (EXPAUSA.SA) — Sistema Inventario MAC
+  </footer>
+</div>
