@@ -1,9 +1,124 @@
-<div class="shell">
-  <app-navbar></app-navbar>
+<div class="layout" [class.sidebar-open]="sidebarOpen">
+  <!-- Backdrop (móvil) -->
+  <div class="backdrop" *ngIf="sidebarOpen" (click)="closeSidebar()"></div>
 
-  <main class="content">
-    <router-outlet></router-outlet>
-  </main>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-top">
+      <a class="brand" routerLink="/" (click)="closeSidebar()">
+        <div class="logo">
+          <img src="/bonanza.png" alt="Logo Bonanza" />
+        </div>
+        <div class="btxt">
+          <div class="t1">BONANZA</div>
+          <div class="t2">Inventario MAC</div>
+        </div>
+      </a>
 
-  <app-footer></app-footer>
+      <button type="button" class="x" (click)="closeSidebar()" aria-label="Cerrar menú">✕</button>
+    </div>
+
+    <div class="sb-user">
+      <div class="u-avatar">{{ (userLabel || 'U').slice(0, 1) | uppercase }}</div>
+      <div class="u-meta">
+        <div class="u-name">{{ userLabel }}</div>
+        <div class="u-role">{{ roleLabel }}</div>
+      </div>
+    </div>
+
+    <nav class="sb-nav">
+      <a
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeSidebar()"
+      >
+        <span class="ic">▦</span>
+        Dashboard
+      </a>
+
+      <!-- ✅ Inventario root: lo controlamos para que vaya a un AP -->
+      <a
+        routerLink="/inventory"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: false }"
+        (click)="closeSidebar()"
+      >
+        <span class="ic">≡</span>
+        Inventario
+      </a>
+
+      <a routerLink="/inventory/global" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="ic">⌕</span>
+        Búsqueda global
+      </a>
+
+      <!-- APs dropdown -->
+      <button type="button" class="nav-dd" (click)="toggleAp()" [class.open]="apOpen">
+        <span class="ic">📡</span>
+        APs
+        <span class="chev">▾</span>
+      </button>
+
+      <!-- ✅ APs con routerLink + active -->
+      <div class="ap-list" *ngIf="apOpen">
+        <a
+          class="ap-item"
+          *ngFor="let ap of aps"
+          [routerLink]="['/inventory', toSlug(ap)]"
+          [class.active]="isApActive(ap)"
+          (click)="closeSidebar()"
+        >
+          {{ ap }}
+        </a>
+      </div>
+
+      <a
+        *ngIf="isAdmin"
+        routerLink="/admin/users"
+        routerLinkActive="active"
+        (click)="closeSidebar()"
+      >
+        <span class="ic">👤</span>
+        Usuarios
+      </a>
+    </nav>
+
+    <div class="sb-foot">
+      <button type="button" class="btn-out" (click)="logout()">Salir</button>
+      <div class="sb-mini">BY FR...</div>
+      <div class="sb-mini">© {{ year }} EXPAUSA.SA</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <header class="topwrap">
+      <div class="topbar">
+        <button type="button" class="burger" (click)="toggleSidebar()" aria-label="Abrir menú">
+          ☰
+        </button>
+
+        <div class="tb-title">
+          <div class="line1">Sistema de Inventario MAC</div>
+          <div class="line2">Control • Seguridad • Monitoreo</div>
+        </div>
+
+        <div class="tb-right">
+          <div class="tb-user">
+            <div class="name">{{ userLabel }}</div>
+            <div class="role">{{ roleLabel }}</div>
+          </div>
+
+          <button type="button" class="tb-out" (click)="logout()">Salir</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 </div>

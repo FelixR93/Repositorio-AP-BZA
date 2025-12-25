@@ -32,14 +32,18 @@ export const routes: Routes = [
       { path: 'inventory', component: ApTabs },
 
       // Global (todos los APs)
-      { path: 'inventory/global', component: DevicesList },
+      { path: 'inventory/global', component: DevicesList, data: { mode: 'GLOBAL' } },
 
       // AP específico
-      { path: 'inventory/:ap', component: DevicesList },
+      { path: 'inventory/:ap', component: DevicesList, data: { mode: 'AP' } },
+
+      // NUEVO (sin id)
       { path: 'inventory/:ap/new', component: DevicesForm },
+
+      // IMPORT
       { path: 'inventory/:ap/import', component: DevicesImport },
 
-      // Edit por ID
+      // EDIT (con id + /edit)
       { path: 'inventory/:ap/:id/edit', component: DevicesForm },
 
       // Admin
@@ -47,11 +51,11 @@ export const routes: Routes = [
         path: 'admin/users',
         component: Users,
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['ADMIN'] },
       },
 
       { path: 'forbidden', component: Forbidden },
-      { path: '**', component: NotFound }
-    ]
-  }
+      { path: '**', component: NotFound },
+    ],
+  },
 ];

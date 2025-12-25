@@ -81,7 +81,7 @@ async function buildDevicesTemplateWorkbook(fixedApName = "") {
   ["MOVIL", "LAPTOP", "PC"].forEach((t, i) => (help.getCell(`B${i + 2}`).value = t));
 
   help.getCell("C1").value = "AREAS";
-  ["CONTROL", "SEGURIDAD", "MONITOREO"].forEach((a, i) => (help.getCell(`C${i + 2}`).value = a));
+  ["MOLINOS", "MINA", "SEGURIDAD"].forEach((a, i) => (help.getCell(`C${i + 2}`).value = a));
 
   // Data validation (listas desplegables)
   // Rango para validar: filas 2..5000 (amplio)
@@ -115,7 +115,7 @@ async function buildDevicesTemplateWorkbook(fixedApName = "") {
     formulae: [`=Listas!$C$2:$C$4`],
     showErrorMessage: true,
     errorTitle: "Área inválida",
-    error: "Selecciona CONTROL, SEGURIDAD o MONITOREO."
+    error: "Selecciona MOLINOS, MINA o SEGURIDAD."
   });
 
   // Notas en columnas obligatorias
@@ -123,7 +123,7 @@ async function buildDevicesTemplateWorkbook(fixedApName = "") {
   ws.getCell("B1").note = "Obligatorio. Nombre del dueño del dispositivo.";
   ws.getCell("C1").note = "Obligatorio. Formato recomendado AA:BB:CC:DD:EE:FF.";
   ws.getCell("D1").note = "Obligatorio. MOVIL/LAPTOP/PC.";
-  ws.getCell("E1").note = "Obligatorio. CONTROL/SEGURIDAD/MONITOREO.";
+  ws.getCell("E1").note = "Obligatorio. MOLINOS/MINA/SEGURIDAD.";
   ws.getCell("F1").note = "Obligatorio. Punto o ubicación específica.";
 
   // Autofiltro

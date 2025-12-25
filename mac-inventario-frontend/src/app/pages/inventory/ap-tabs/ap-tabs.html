@@ -2,16 +2,39 @@
   <div class="top">
     <div>
       <h2>Inventario</h2>
-      <div class="sub">Selecciona un AP para administrar registros o usa Búsqueda Global.</div>
+      <div class="sub">Selecciona un AP para registrar, importar o administrar. O usa la búsqueda global.</div>
     </div>
 
-    <button class="btn" type="button" (click)="goGlobal()">Búsqueda Global</button>
+    <div class="top-actions">
+      <button class="btn primary" type="button" (click)="goGlobal()">
+        🔎 Búsqueda global (todos los APs)
+      </button>
+    </div>
+  </div>
+
+  <div class="card search">
+    <div class="search-left">
+      <div class="label">Buscar AP</div>
+      <input [(ngModel)]="q" placeholder="Ej: Bonanza, Casa, Garita..." />
+    </div>
+
+    <div class="search-right">
+      <div class="pill">APs: <b>{{ filteredAps.length }}</b></div>
+      <button class="btn ghost" type="button" (click)="q=''">Limpiar</button>
+    </div>
   </div>
 
   <div class="grid">
-    <button class="card" type="button" *ngFor="let ap of aps" (click)="goAp(ap)">
-      <div class="t">{{ ap }}</div>
-      <div class="s">Abrir inventario del AP</div>
+    <button
+      class="ap-card"
+      type="button"
+      *ngFor="let ap of filteredAps"
+      (click)="goAp(ap)"
+      title="Abrir inventario del AP"
+    >
+      <div class="ap-name">{{ ap }}</div>
+      <div class="ap-hint">Ver registros • Crear • Importar • Exportar</div>
+      <div class="ap-go">Abrir →</div>
     </button>
   </div>
 </div>

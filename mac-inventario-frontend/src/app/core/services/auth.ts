@@ -8,7 +8,7 @@ const API_BASE_URL = 'http://localhost:4000/api';
 const TOKEN_KEY = 'bonanza_token';
 const USER_KEY = 'bonanza_user';
 
-interface LoginResponse {
+export interface LoginResponse {
   token: string;
   user: User;
 }
@@ -26,24 +26,33 @@ export class AuthService {
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
 
-    // ✅ Solo leer localStorage en navegador
+    // ✅ solo en navegador
     if (this.isBrowser) {
       this.userSubject.next(this.readUser());
     }
   }
 
+  // -----------------------------
+  // LOGIN
+  // -----------------------------
   login(username: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${API_BASE_URL}/auth/login`, { username, password }).pipe(
+    const body = { username: username.trim(), password };
+
+    return this.http.post<LoginResponse>(`${API_BASE_URL}/auth/login`, body).pipe(
       tap((res) => {
+        // ✅ guardar SIEMPRE antes de emitir usuario
         if (this.isBrowser) {
-          localStorage.setItem(TOKEN_KEY, res.token);
-          localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+          this.setToken(res.token);
+          this.setUser(res.user);
         }
         this.userSubject.next(res.user);
       })
     );
   }
 
+  // -----------------------------
+  // LOGOUT
+  // -----------------------------
   logout(): void {
     if (this.isBrowser) {
       localStorage.removeItem(TOKEN_KEY);
@@ -52,13 +61,29 @@ export class AuthService {
     this.userSubject.next(null);
   }
 
+  // -----------------------------
+  // TOKEN
+  // -----------------------------
   getToken(): string | null {
     if (!this.isBrowser) return null;
     return localStorage.getItem(TOKEN_KEY);
   }
 
+  setToken(token: string) {
+    if (!this.isBrowser) return;
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+
+  // -----------------------------
+  // USER
+  // -----------------------------
   getUser(): User | null {
     return this.userSubject.value;
+  }
+
+  setUser(user: User) {
+    if (!this.isBrowser) return;
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
   isLoggedIn(): boolean {
@@ -71,6 +96,7 @@ export class AuthService {
   }
 
   private readUser(): User | null {
+    if (!this.isBrowser) return null;
     try {
       const raw = localStorage.getItem(USER_KEY);
       return raw ? (JSON.parse(raw) as User) : null;

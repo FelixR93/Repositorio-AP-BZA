@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+
 import { UsersService, CreateUserDto, UpdateUserDto } from '../../../core/services/users';
 import { User } from '../../../core/models/user.model';
 
@@ -11,14 +13,13 @@ import { User } from '../../../core/models/user.model';
   templateUrl: './users.html',
   styleUrl: './users.scss',
 })
-export class Users {
+export class Users implements OnInit, OnDestroy {
   loading = false;
   error = '';
 
   q = '';
   users: User[] = [];
 
-  // Crear
   creating = false;
   createForm: CreateUserDto = {
     fullName: '',
@@ -27,7 +28,6 @@ export class Users {
     role: 'USER',
   };
 
-  // Editar (modal)
   editOpen = false;
   savingEdit = false;
   editError = '';
@@ -39,17 +39,23 @@ export class Users {
     password: '',
   };
 
-  // Eliminar (modal)
   deleteOpen = false;
   deleting = false;
   deleteError = '';
   deleteTarget: User | null = null;
 
-  constructor(private usersService: UsersService) {
+  private sub = new Subscription();
+
+  constructor(private usersService: UsersService, private cdr: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
     this.load();
   }
 
-  /** Normaliza para soportar _id o id, e isActive opcional */
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+  }
+
   private normalize(u: User): User {
     return {
       ...u,
@@ -58,14 +64,21 @@ export class Users {
     } as any;
   }
 
+  getId(u: User): string {
+    const anyU: any = u as any;
+    return String(anyU?._id || anyU?.id || '');
+  }
+
   load() {
     this.loading = true;
     this.error = '';
 
-    this.usersService.getUsers().subscribe({
+    const s = this.usersService.getUsers().subscribe({
       next: (items: User[]) => {
         this.users = (items || []).map((u) => this.normalize(u));
         this.loading = false;
+
+        queueMicrotask(() => this.cdr.detectChanges());
       },
       error: (err: any) => {
         this.loading = false;
@@ -74,14 +87,16 @@ export class Users {
           err?.message ||
           `Error ${err?.status}` ||
           'No se pudo cargar usuarios.';
+
+        queueMicrotask(() => this.cdr.detectChanges());
       },
     });
+
+    this.sub.add(s);
   }
 
   get filtered(): User[] {
-    const term = String(this.q || '')
-      .trim()
-      .toLowerCase();
+    const term = String(this.q || '').trim().toLowerCase();
     if (!term) return this.users;
 
     return this.users.filter((u) => {
@@ -92,7 +107,6 @@ export class Users {
     });
   }
 
-  // ---------- Crear ----------
   create() {
     this.error = '';
 
@@ -103,7 +117,7 @@ export class Users {
 
     this.creating = true;
 
-    this.usersService.createUser(this.createForm).subscribe({
+    const s = this.usersService.createUser(this.createForm).subscribe({
       next: () => {
         this.creating = false;
         this.createForm = { fullName: '', username: '', password: '', role: 'USER' };
@@ -116,11 +130,13 @@ export class Users {
           err?.message ||
           `Error ${err?.status}` ||
           'No se pudo crear el usuario.';
+        queueMicrotask(() => this.cdr.detectChanges());
       },
     });
+
+    this.sub.add(s);
   }
 
-  // ---------- Editar ----------
   openEdit(u: User) {
     const nu = this.normalize(u);
     this.editTarget = nu;
@@ -129,11 +145,13 @@ export class Users {
       fullName: (nu as any).fullName || '',
       username: (nu as any).username || '',
       role: (nu as any).role || 'USER',
-      password: '', // opcional
+      password: '',
     };
 
     this.editError = '';
     this.editOpen = true;
+
+    queueMicrotask(() => this.cdr.detectChanges());
   }
 
   closeEdit() {
@@ -142,6 +160,8 @@ export class Users {
     this.editError = '';
     this.editTarget = null;
     this.editForm = { fullName: '', username: '', role: 'USER', password: '' };
+
+    queueMicrotask(() => this.cdr.detectChanges());
   }
 
   saveEdit() {
@@ -162,47 +182,44 @@ export class Users {
       role: this.editForm.role,
     };
 
-    // password solo si se escribió
     if (this.editForm.password && String(this.editForm.password).trim()) {
       payload.password = String(this.editForm.password).trim();
     }
 
     this.savingEdit = true;
 
-    this.usersService.updateUser(id, payload).subscribe({
+    const s = this.usersService.updateUser(id, payload).subscribe({
       next: () => {
         this.savingEdit = false;
         this.closeEdit();
         this.load();
       },
       error: (err: any) => {
-        console.error('saveEdit error:', err);
         this.savingEdit = false;
         this.editError =
           err?.error?.message ||
           err?.message ||
           `Error ${err?.status}` ||
           'No se pudo guardar cambios.';
+
+        queueMicrotask(() => this.cdr.detectChanges());
       },
     });
+
+    this.sub.add(s);
   }
 
-  // ---------- Activar/Desactivar ----------
   toggleActive(u: User) {
     const nu = this.normalize(u);
-
-    // ✅ id SIEMPRE como string (si no existe, salimos)
     const id = String((nu as any)._id || (nu as any).id || '');
     if (!id) return;
 
-    // ✅ calcular nextActive aquí (antes no existía)
     const current = Boolean((nu as any).isActive ?? true);
     const nextActive = !current;
 
-    this.usersService.setActive(id, nextActive).subscribe({
+    const s = this.usersService.setActive(id, nextActive).subscribe({
       next: () => this.load(),
       error: (err: any) => {
-        console.error('toggleActive error:', err);
         alert(
           err?.error?.message ||
             err?.message ||
@@ -211,13 +228,15 @@ export class Users {
         );
       },
     });
+
+    this.sub.add(s);
   }
 
-  // ---------- Eliminar ----------
   openDelete(u: User) {
     this.deleteTarget = this.normalize(u);
     this.deleteError = '';
     this.deleteOpen = true;
+    queueMicrotask(() => this.cdr.detectChanges());
   }
 
   closeDelete() {
@@ -225,6 +244,7 @@ export class Users {
     this.deleting = false;
     this.deleteError = '';
     this.deleteTarget = null;
+    queueMicrotask(() => this.cdr.detectChanges());
   }
 
   confirmDelete() {
@@ -235,18 +255,20 @@ export class Users {
     this.deleting = true;
     this.deleteError = '';
 
-    this.usersService.deleteUser(id).subscribe({
+    const s = this.usersService.deleteUser(id).subscribe({
       next: () => {
         this.deleting = false;
         this.closeDelete();
         this.load();
       },
       error: (err: any) => {
-        console.error('confirmDelete error:', err);
         this.deleting = false;
         this.deleteError =
           err?.error?.message || err?.message || `Error ${err?.status}` || 'No se pudo eliminar.';
+        queueMicrotask(() => this.cdr.detectChanges());
       },
     });
+
+    this.sub.add(s);
   }
 }

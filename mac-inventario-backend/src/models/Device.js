@@ -20,7 +20,7 @@ const deviceSchema = new mongoose.Schema(
 
     area: {
       type: String,
-      enum: ["CONTROL", "SEGURIDAD", "MONITOREO"],
+      enum: ["MOLINOS", "MINA", "SEGURIDAD"],
       required: true
     },
 

@@ -1,2 +1,17 @@
-<h2>Acceso denegado</h2>
-<p>No tienes permisos para acceder a esta sección.</p>
+<div class="wrap">
+  <div class="card">
+    <div class="icon" aria-hidden="true">⛔</div>
+
+    <h2>Acceso denegado</h2>
+    <p>No tienes permisos para acceder a esta sección.</p>
+
+    <div class="actions">
+      <button type="button" class="btn ghost" (click)="goBack()">Volver</button>
+      <button type="button" class="btn" (click)="goHome()">Ir al Dashboard</button>
+    </div>
+
+    <div class="hint">
+      Si crees que esto es un error, solicita acceso al administrador.
+    </div>
+  </div>
+</div>

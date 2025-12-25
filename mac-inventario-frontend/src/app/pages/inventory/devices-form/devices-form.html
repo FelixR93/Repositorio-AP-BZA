@@ -1,104 +1,216 @@
 <div class="page">
-  <div class="top">
-    <div>
-      <h2>{{ isEdit ? 'Editar registro' : 'Nuevo registro' }} — {{ apName }}</h2>
+  <!-- Header -->
+  <div class="head">
+    <div class="h-left">
+      <div class="kicker">Inventario MAC</div>
+
+      <h2>
+        {{ isEdit ? 'Editar registro' : 'Nuevo registro' }}
+        <span class="muted">— {{ apName }}</span>
+      </h2>
+
       <div class="sub">
-        {{ isEdit ? 'Actualiza la información del dispositivo.' : 'Registra un dispositivo en el AP seleccionado.' }}
+        {{
+          isEdit
+            ? 'Actualiza la información del dispositivo.'
+            : 'Registra un dispositivo en el AP seleccionado.'
+        }}
       </div>
     </div>
 
-    <div class="top-actions">
-      <button class="btn ghost" type="button" (click)="cancel()">Volver</button>
-      <button class="btn" type="button" (click)="save()" [disabled]="saving || loading">
-        {{ saving ? 'Guardando…' : (isEdit ? 'Guardar cambios' : 'Guardar') }}
+    <div class="h-actions">
+      <button class="btn ghost" type="button" (click)="cancel()" [disabled]="saving || deleting">
+        Volver
+      </button>
+
+      <button
+        class="btn primary"
+        type="button"
+        (click)="save()"
+        [disabled]="saving || loading || deleting"
+      >
+        <span class="spin" *ngIf="saving"></span>
+        {{ saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Guardar' }}
+      </button>
+
+      <!-- ✅ Eliminar SOLO en edición -->
+      <button
+        *ngIf="isEdit"
+        class="btn danger"
+        type="button"
+        (click)="openDelete()"
+        [disabled]="loading || saving || deleting"
+      >
+        Eliminar
       </button>
     </div>
   </div>
 
-  <div *ngIf="loading" class="card loading">Cargando registro…</div>
+  <!-- ✅ MODAL eliminar SOLO en edición -->
+  <div class="modal-backdrop" *ngIf="isEdit && deleteModalOpen" (click)="closeDelete()"></div>
+
+  <div class="modal" *ngIf="isEdit && deleteModalOpen">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="m-head">
+        <div>
+          <div class="m-title">Confirmar eliminación</div>
+          <div class="m-sub">
+            ¿Deseas eliminar la MAC:
+            <b>{{ form.mac || '—' }}</b
+            ><br />
+            AP: <b>{{ form.apName || '—' }}</b> • Punto: <b>{{ form.locationPoint || '—' }}</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="m-actions">
+        <button class="btn ghost" type="button" (click)="closeDelete()" [disabled]="deleting">
+          Cancelar
+        </button>
+
+        <button class="btn danger" type="button" (click)="confirmDelete()" [disabled]="deleting">
+          {{ deleting ? 'Eliminando…' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- States -->
+  <div *ngIf="loading" class="state card">
+    <div class="dot"></div>
+    <div>
+      <div class="st-title">Cargando registro</div>
+      <div class="st-sub">Obteniendo información del dispositivo…</div>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div *ngIf="error" class="alert error">
+    <div class="a-title">No se pudo guardar</div>
+    <div class="a-sub">{{ error }}</div>
+  </div>
+
+  <div *ngIf="success" class="alert ok">
+    <div class="a-title">Listo</div>
+    <div class="a-sub">{{ success }}</div>
+  </div>
 
   <div *ngIf="!loading" class="grid">
-    <div class="card form-card">
-      <div class="section-title">Información principal</div>
+    <!-- Columna izquierda -->
+    <div class="col">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="title">Información principal</div>
+            <div class="hint">Campos obligatorios: Dueño, MAC y Punto.</div>
+          </div>
 
-      <div class="row">
-        <div class="field">
-          <label>AP</label>
-          <!-- En creación: fijo por ruta. En edición: mostramos el valor y dejamos editable si quieres -->
-          <input [(ngModel)]="form.apName" name="apName" [disabled]="!isEdit" />
-          <div class="hint">En “Nuevo”, el AP se define por la pestaña seleccionada.</div>
+          <span class="badge" [class.edit]="isEdit">{{ isEdit ? 'EDICIÓN' : 'NUEVO' }}</span>
         </div>
 
-        <div class="field">
-          <label>Nombre (Dueño del equipo)</label>
-          <input [(ngModel)]="form.ownerName" name="ownerName" placeholder="Ej: Juan Pérez" />
-        </div>
-      </div>
+        <div class="row">
+          <div class="field">
+            <label>AP</label>
+            <input [(ngModel)]="form.apName" name="apName" [disabled]="!isEdit" />
+            <div class="mini">En “Nuevo”, el AP se define por la pestaña seleccionada.</div>
+          </div>
 
-      <div class="row">
-        <div class="field">
-          <label>MAC</label>
-          <input [(ngModel)]="form.mac" name="mac" placeholder="AA:BB:CC:DD:EE:FF" />
-          <div class="hint">Se normaliza automáticamente a formato AA:BB:CC:DD:EE:FF</div>
-        </div>
-
-        <div class="field">
-          <label>Punto / Ubicación</label>
-          <input [(ngModel)]="form.locationPoint" name="locationPoint" placeholder="Ej: Garita 1 / Oficina Control" />
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label>Tipo de dispositivo</label>
-          <select [(ngModel)]="form.deviceType" name="deviceType">
-            <option *ngFor="let t of deviceTypes" [value]="t">{{ t }}</option>
-          </select>
+          <div class="field">
+            <label>Nombre (Dueño del equipo) <span class="req">*</span></label>
+            <input [(ngModel)]="form.ownerName" name="ownerName" placeholder="Ej: Juan Pérez" />
+          </div>
         </div>
 
-        <div class="field">
-          <label>Área</label>
-          <select [(ngModel)]="form.area" name="area">
-            <option *ngFor="let a of areas" [value]="a">{{ a }}</option>
-          </select>
+        <div class="row">
+          <div class="field">
+            <label>MAC <span class="req">*</span></label>
+            <input [(ngModel)]="form.mac" name="mac" placeholder="AA:BB:CC:DD:EE:FF" />
+            <div class="mini">
+              Acepta aa-bb-cc..., aa:bb:cc..., o aabbccddeeff. Se normaliza al guardar.
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Punto / Ubicación <span class="req">*</span></label>
+            <input
+              [(ngModel)]="form.locationPoint"
+              name="locationPoint"
+              placeholder="Ej: Garita 1 / Oficina Control"
+            />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Tipo de dispositivo</label>
+            <select [(ngModel)]="form.deviceType" name="deviceType">
+              <option *ngFor="let t of deviceTypes" [value]="t">{{ t }}</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Área</label>
+            <select [(ngModel)]="form.area" name="area">
+              <option *ngFor="let a of areas" [value]="a">{{ a }}</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="card form-card">
-      <div class="section-title">Información opcional</div>
+    <!-- Columna derecha -->
+    <div class="col">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="title">Información opcional</div>
+            <div class="hint">Datos adicionales para inventario y trazabilidad.</div>
+          </div>
+        </div>
 
-      <div class="row">
-        <div class="field">
-          <label>Marca</label>
-          <input [(ngModel)]="form.brand" name="brand" placeholder="Ej: Samsung / Dell" />
+        <div class="row">
+          <div class="field">
+            <label>Marca</label>
+            <input [(ngModel)]="form.brand" name="brand" placeholder="Ej: Samsung / Dell" />
+          </div>
+
+          <div class="field">
+            <label>Modelo</label>
+            <input [(ngModel)]="form.model" name="model" placeholder="Ej: A52 / Latitude 5420" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Serial</label>
+            <input [(ngModel)]="form.serial" name="serial" />
+          </div>
+
+          <div class="field">
+            <label>Hostname</label>
+            <input [(ngModel)]="form.hostname" name="hostname" placeholder="Ej: PC-CONTROL-01" />
+          </div>
         </div>
 
         <div class="field">
-          <label>Modelo</label>
-          <input [(ngModel)]="form.model" name="model" placeholder="Ej: A52 / Latitude 5420" />
+          <label>Notas</label>
+          <textarea
+            [(ngModel)]="form.notes"
+            name="notes"
+            rows="5"
+            placeholder="Observaciones…"
+          ></textarea>
         </div>
       </div>
 
-      <div class="row">
-        <div class="field">
-          <label>Serial</label>
-          <input [(ngModel)]="form.serial" name="serial" />
-        </div>
-
-        <div class="field">
-          <label>Hostname</label>
-          <input [(ngModel)]="form.hostname" name="hostname" placeholder="Ej: PC-CONTROL-01" />
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Notas</label>
-        <textarea [(ngModel)]="form.notes" name="notes" rows="4" placeholder="Observaciones…"></textarea>
+      <div class="card aside">
+        <div class="aside-title">Tips rápidos</div>
+        <ul class="tips">
+          <li>MAC válida: 12 caracteres hex (0-9, A-F).</li>
+          <li>Ejemplo: <span class="mono">AA:BB:CC:DD:EE:FF</span></li>
+          <li>Punto: usa nombres consistentes (Ej: “Garita 1”).</li>
+        </ul>
       </div>
     </div>
-
-    <div *ngIf="error" class="card msg error">{{ error }}</div>
-    <div *ngIf="success" class="card msg ok">{{ success }}</div>
   </div>
 </div>

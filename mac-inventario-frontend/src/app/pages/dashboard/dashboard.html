@@ -1,99 +1,283 @@
 <div class="dash">
-  <div class="dash-top">
-    <div>
-      <h1>Dashboard</h1>
-      <p class="sub">Bonanza (EXPAUSA.SA) — Inventario centralizado de MAC</p>
+  <!-- HEADER -->
+  <div class="header card">
+    <div class="h-left">
+      <div class="h-title">
+        <div class="ttl">Dashboard Operativo</div>
+        <div class="sub">Inventario centralizado por AP • Resumen y control</div>
+      </div>
+
+      <div class="meta">
+        <span class="pill">
+          <span class="dot ok"></span>
+          Estado: <b>Operativo</b>
+        </span>
+
+        <span class="pill ghost">
+          Usuario: <b>{{ userLabel }}</b>
+        </span>
+
+        <span class="pill role" [class.admin]="isAdmin">
+          Rol: <b>{{ roleLabel }}</b>
+        </span>
+
+        <span class="pill ghost" *ngIf="lastUpdated as lu">
+          Actualizado: <b>{{ lu | date : 'dd/MM/yyyy HH:mm' }}</b>
+        </span>
+      </div>
     </div>
 
-    <button class="btn" type="button" (click)="refresh()">Actualizar</button>
+    <div class="h-right">
+      <button class="btn" type="button" (click)="refresh()" [disabled]="loading">
+        <span class="spin" *ngIf="loading"></span>
+        {{ loading ? 'Actualizando…' : 'Actualizar' }}
+      </button>
+    </div>
+
+    <!-- decor -->
+    <div class="fx-grid" aria-hidden="true"></div>
+    <div class="fx-orb a" aria-hidden="true"></div>
+    <div class="fx-orb b" aria-hidden="true"></div>
   </div>
 
-  <div *ngIf="loading" class="loading">Cargando información…</div>
-  <div *ngIf="!loading && error" class="error">{{ error }}</div>
+  <!-- STATES -->
+  <div *ngIf="loading" class="state card">
+    <div class="pulse"></div>
+    <div>
+      <div class="st-ttl">Cargando información</div>
+      <div class="st-sub">Obteniendo estadísticas del inventario…</div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && error" class="state card error">
+    <div>
+      <div class="st-ttl">No se pudo cargar</div>
+      <div class="st-sub">{{ error }}</div>
+    </div>
+  </div>
 
   <div *ngIf="!loading && !error">
-    <!-- KPIs -->
-    <div class="grid kpis">
-      <div class="card">
-        <div class="kpi-title">Total registros</div>
-        <div class="kpi-value">{{ total }}</div>
-        <div class="kpi-hint">MACs registradas en el sistema</div>
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi card">
+        <div class="k-top">
+          <div>
+            <div class="k-lbl">Total registros</div>
+            <div class="k-hint">MACs registradas</div>
+          </div>
+          <div class="k-ico">Σ</div>
+        </div>
+        <div class="k-val">{{ total }}</div>
+        <div class="k-foot">
+          <span class="tag">MACs</span>
+          <span class="muted">Fuente: DB</span>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="kpi-title">Control</div>
-        <div class="kpi-value">{{ byArea.CONTROL }}</div>
-        <div class="kpi-hint">Área responsable</div>
+      <div class="kpi card">
+        <div class="k-top">
+          <div>
+            <div class="k-lbl">Áreas</div>
+            <div class="k-hint">Distribución</div>
+          </div>
+          <div class="k-ico soft">▤</div>
+        </div>
+        <div class="k-val sm">{{ totalAreas }}</div>
+        <div class="k-foot">
+          <span class="tag soft">Molinos / Mina / Seguridad</span>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="kpi-title">Seguridad</div>
-        <div class="kpi-value">{{ byArea.SEGURIDAD }}</div>
-        <div class="kpi-hint">Área responsable</div>
+      <div class="kpi card">
+        <div class="k-top">
+          <div>
+            <div class="k-lbl">Tipos</div>
+            <div class="k-hint">Categorías</div>
+          </div>
+          <div class="k-ico soft">◈</div>
+        </div>
+        <div class="k-val sm">{{ totalTypes }}</div>
+        <div class="k-foot">
+          <span class="tag soft">Móvil / Laptop / PC</span>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="kpi-title">Monitoreo</div>
-        <div class="kpi-value">{{ byArea.MONITOREO }}</div>
-        <div class="kpi-hint">Área responsable</div>
+      <div class="kpi card">
+        <div class="k-top">
+          <div>
+            <div class="k-lbl">APs</div>
+            <div class="k-hint">Puntos activos</div>
+          </div>
+          <div class="k-ico soft">📡</div>
+        </div>
+        <div class="k-val sm">{{ aps.length }}</div>
+        <div class="k-foot">
+          <button class="link" type="button" (click)="openApsModal()">Ver detalle</button>
+        </div>
       </div>
     </div>
 
-    <!-- Distribución -->
-    <div class="grid two">
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+      <!-- LEFT: TOP APs -->
       <div class="card">
-        <div class="card-title">Distribución por AP</div>
-
-        <div class="ap-list">
-          <div class="ap-row" *ngFor="let ap of aps">
-            <div class="ap-name">{{ ap }}</div>
-            <div class="ap-bar">
-              <div class="ap-fill" [style.width.%]="apPercent(ap)"></div>
-            </div>
-            <div class="ap-count">{{ byAp[ap] || 0 }}</div>
+        <div class="card-head">
+          <div>
+            <div class="card-title">Top APs</div>
+            <div class="card-sub">Los APs con más registros</div>
           </div>
+          <button class="btn ghost" type="button" (click)="openApsModal()">Ver todos</button>
+        </div>
+
+        <div class="top-aps">
+          <div class="row" *ngFor="let x of topAps; trackBy: trackByAp">
+            <div class="r-left">
+              <div class="ap">{{ x.ap }}</div>
+              <div class="sub">{{ x.count }} registros • {{ x.percent }}%</div>
+            </div>
+
+            <div class="bar" aria-hidden="true">
+              <div class="fill" [style.width.%]="x.percent"></div>
+            </div>
+
+            <div class="r-right">{{ x.percent }}%</div>
+          </div>
+
+          <div class="empty" *ngIf="topAps.length === 0">No hay datos de AP todavía.</div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-title">Dispositivos por tipo</div>
-
-        <div class="type-grid">
-          <div class="type-box">
-            <div class="t">Móvil</div>
-            <div class="v">{{ byType.MOVIL }}</div>
-          </div>
-          <div class="type-box">
-            <div class="t">Laptop</div>
-            <div class="v">{{ byType.LAPTOP }}</div>
-          </div>
-          <div class="type-box">
-            <div class="t">PC</div>
-            <div class="v">{{ byType.PC }}</div>
-          </div>
-        </div>
-
-        <!-- ✅ Bitácora admin -->
-        <div class="card-title" style="margin-top:14px;" *ngIf="isAdmin">Bitácora (ADMIN)</div>
-
-        <div class="logs" *ngIf="isAdmin">
-          <div class="log-row" *ngFor="let l of logs">
-            <div class="log-main">
-              <div class="log-title">
-                <span class="tag">{{ l.action }}</span>
-                {{ l.message }}
-              </div>
-              <div class="log-sub">
-                {{ l.userName }} ({{ l.role }}) • {{ l.ip }} • {{ l.createdAt | date:'dd/MM/yyyy HH:mm' }}
-              </div>
+      <!-- RIGHT: AREA + TYPE + LOGS -->
+      <div class="stack">
+        <!-- Area distribution -->
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Distribución por área</div>
+              <div class="card-sub">Participación sobre el total</div>
             </div>
           </div>
 
-          <div class="empty-logs" *ngIf="logs.length === 0">
-            No hay acciones registradas todavía.
+          <div class="mini-bars">
+            <div class="mrow">
+              <div class="ml">Molinos</div>
+              <div class="mb">
+                <div class="mf" [style.width.%]="areaPercent('MOLINOS')"></div>
+              </div>
+              <div class="mr">{{ byArea.MOLINOS }} ({{ areaPercent('MOLINOS') }}%)</div>
+            </div>
+
+            <div class="mrow">
+              <div class="ml">Mina</div>
+              <div class="mb">
+                <div class="mf" [style.width.%]="areaPercent('MINA')"></div>
+              </div>
+              <div class="mr">{{ byArea.MINA }} ({{ areaPercent('MINA') }}%)</div>
+            </div>
+
+            <div class="mrow">
+              <div class="ml">Seguridad</div>
+              <div class="mb">
+                <div class="mf" [style.width.%]="areaPercent('SEGURIDAD')"></div>
+              </div>
+              <div class="mr">{{ byArea.SEGURIDAD }} ({{ areaPercent('SEGURIDAD') }}%)</div>
+            </div>
           </div>
         </div>
 
+        <!-- Types -->
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Dispositivos por tipo</div>
+              <div class="card-sub">Resumen por categoría</div>
+            </div>
+          </div>
+
+          <div class="type-grid">
+            <div class="tbox">
+              <div class="t-top">
+                <div class="t">{{ typeLabel('MOVIL') }}</div>
+                <div class="ico">📱</div>
+              </div>
+              <div class="v">{{ byType.MOVIL }}</div>
+              <div class="hint">Teléfonos/tablets</div>
+            </div>
+
+            <div class="tbox">
+              <div class="t-top">
+                <div class="t">{{ typeLabel('LAPTOP') }}</div>
+                <div class="ico">💻</div>
+              </div>
+              <div class="v">{{ byType.LAPTOP }}</div>
+              <div class="hint">Portátiles</div>
+            </div>
+
+            <div class="tbox">
+              <div class="t-top">
+                <div class="t">{{ typeLabel('PC') }}</div>
+                <div class="ico">🖥</div>
+              </div>
+              <div class="v">{{ byType.PC }}</div>
+              <div class="hint">Escritorio</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="card" *ngIf="isAdmin">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Bitácora</div>
+              <div class="card-sub">Acciones recientes (ADMIN)</div>
+            </div>
+          </div>
+
+          <div class="logs">
+            <div class="log" *ngFor="let l of logs; trackBy: trackByLog">
+              <div class="l-left">
+                <span class="badge" [class]="actionClass(l.action)">{{ l.action }}</span>
+              </div>
+
+              <div class="l-main">
+                <div class="l-ttl">{{ l.message }}</div>
+                <div class="l-sub">
+                  <b>{{ l.userName }}</b> ({{ l.role }}) • IP: {{ formatIp(l.ip) }} •
+                  {{ l.createdAt | date : 'dd/MM/yyyy HH:mm' }}
+                </div>
+              </div>
+            </div>
+
+            <div class="empty" *ngIf="logs.length === 0">No hay acciones registradas todavía.</div>
+          </div>
+        </div>
+
+        <div class="card" *ngIf="!isAdmin">
+          <div class="empty">Vista de bitácora disponible solo para administradores.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: todos los APs -->
+  <div class="modal-backdrop" *ngIf="apsModalOpen" (click)="closeApsModal()"></div>
+
+  <div class="modal" *ngIf="apsModalOpen">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="m-head">
+        <div>
+          <div class="m-title">Distribución por AP</div>
+          <div class="m-sub">Listado completo</div>
+        </div>
+        <button class="btn ghost" type="button" (click)="closeApsModal()">Cerrar</button>
+      </div>
+
+      <div class="m-list">
+        <div class="m-row" *ngFor="let x of allApsSorted; trackBy: trackByAp">
+          <div class="m-ap">{{ x.ap }}</div>
+          <div class="m-bar"><div class="m-fill" [style.width.%]="x.percent"></div></div>
+          <div class="m-n">{{ x.count }} • {{ x.percent }}%</div>
+        </div>
       </div>
     </div>
   </div>

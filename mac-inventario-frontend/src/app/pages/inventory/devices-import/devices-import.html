@@ -1,45 +1,96 @@
 <div class="page">
-  <div class="top">
-    <div>
-      <h2>Importar Excel — {{ apName }}</h2>
+  <!-- Header -->
+  <div class="head">
+    <div class="h-left">
+      <div class="kicker">Inventario MAC</div>
+      <h2>Importar Excel <span class="muted">— {{ apName }}</span></h2>
       <div class="sub">
-        Sube un .xlsx para insertar nuevos registros. Los duplicados (MAC repetida) no se insertan y se reportan.
+        Sube un <b>.xlsx</b> para insertar nuevos registros. Las MAC duplicadas no se insertan y se reportan.
       </div>
     </div>
 
-    <div class="top-actions">
+    <div class="h-actions">
       <button class="btn ghost" type="button" (click)="downloadTemplate()">Descargar plantilla</button>
       <button class="btn ghost" type="button" (click)="back()">Volver</button>
     </div>
   </div>
 
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <div class="txt">
+        <div class="t">Descarga la plantilla</div>
+        <div class="s">Asegura columnas correctas y formato.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div class="txt">
+        <div class="t">Completa y guarda en .xlsx</div>
+        <div class="s">Evita MAC repetidas si ya existen.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div class="txt">
+        <div class="t">Sube e importa</div>
+        <div class="s">Verás resumen + duplicados + fallidos.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Uploader -->
   <div class="card uploader">
-    <div class="u-head">
-      <div class="u-title">Archivo Excel (.xlsx)</div>
-      <div class="u-hint">Recomendado: usa “Exportar Excel” como base y agrega tus filas.</div>
+    <div class="u-top">
+      <div>
+        <div class="title">Archivo Excel</div>
+        <div class="hint">Formato permitido: <b>.xlsx</b></div>
+      </div>
+
+      <span class="badge">AP: {{ apName }}</span>
     </div>
 
-    <div class="u-body">
-      <input type="file" accept=".xlsx" (change)="onFileChange($event)" />
+    <label class="dropzone">
+      <input class="file-input" type="file" accept=".xlsx" (change)="onFileChange($event)" />
+      <div class="dz-ic">⬆</div>
+      <div class="dz-t">Selecciona un archivo o arrástralo aquí</div>
+      <div class="dz-s">El sistema validará duplicados y filas con errores.</div>
+    </label>
 
-      <div class="file" *ngIf="file">
+    <div class="file" *ngIf="file">
+      <div class="f-left">
         <div class="f-name">{{ file.name }}</div>
         <div class="f-meta">{{ (file.size / 1024) | number:'1.0-0' }} KB</div>
       </div>
+      <span class="chip">Listo</span>
+    </div>
 
-      <button class="btn" type="button" (click)="upload()" [disabled]="uploading || !file">
+    <div class="actions">
+      <button class="btn primary" type="button" (click)="upload()" [disabled]="uploading || !file">
+        <span class="spin" *ngIf="uploading"></span>
         {{ uploading ? 'Importando…' : 'Importar' }}
       </button>
 
-      <div class="err" *ngIf="error">{{ error }}</div>
+      <div class="err" *ngIf="error">
+        <div class="e-title">Error</div>
+        <div class="e-sub">{{ error }}</div>
+      </div>
     </div>
   </div>
 
   <!-- RESULTADOS -->
   <div class="card result" *ngIf="result">
     <div class="r-top">
-      <div class="r-title">Resultado de importación</div>
-      <div class="r-badge">OK</div>
+      <div>
+        <div class="title">Resultado de importación</div>
+        <div class="hint">Registrado por: <b>{{ importUserName }}</b></div>
+      </div>
+      <div class="r-badges">
+        <span class="pill ok">Insertadas: <b>{{ result.summary.inserted }}</b></span>
+        <span class="pill warn">Duplicadas: <b>{{ result.summary.duplicates }}</b></span>
+        <span class="pill bad">Fallidas: <b>{{ result.summary.failed }}</b></span>
+      </div>
     </div>
 
     <div class="kpis">

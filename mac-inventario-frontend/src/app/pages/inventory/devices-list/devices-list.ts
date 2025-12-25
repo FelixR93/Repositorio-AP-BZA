@@ -1,21 +1,37 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription, of, combineLatest } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
+
 import { DevicesService } from '../../../core/services/devices';
 import { Device } from '../../../core/models/device.model';
 import { downloadBlob } from '../../../core/utils/download.util';
 
-type SortKey = 'createdAt' | 'ownerName' | 'mac' | 'deviceType' | 'area' | 'locationPoint' | 'registeredByName';
+type SortKey =
+  | 'createdAt'
+  | 'apName'
+  | 'ownerName'
+  | 'mac'
+  | 'deviceType'
+  | 'area'
+  | 'locationPoint'
+  | 'registeredByName';
 
 @Component({
   selector: 'app-devices-list',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './devices-list.html',
-  styleUrl: './devices-list.scss'
+  styleUrl: './devices-list.scss',
 })
-export class DevicesList {
+export class DevicesList implements OnInit, OnDestroy {
+  private readonly isBrowser: boolean;
+  private sub = new Subscription();
+
+  mode: 'GLOBAL' | 'AP' = 'AP';
+
   apSlug = '';
   apName = '';
 
@@ -25,66 +41,143 @@ export class DevicesList {
   sortDir: 'asc' | 'desc' = 'desc';
 
   page = 1;
-  pageSize = 10;
+  pageSize = 20;
 
   loading = false;
   devices: Device[] = [];
 
+  // ✅ Error visible (NO alert)
+  errorMsg = '';
+
+  // ✅ Modal eliminar
   confirmOpen = false;
   deleting = false;
   toDelete: Device | null = null;
   modalError = '';
 
+  // watchdog timers (anti “se queda cargando”)
+  private loadTimer: any = null;
+  private exportTimer: any = null;
+  private deleteTimer: any = null;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private devicesService: DevicesService
+    private devicesService: DevicesService,
+    @Inject(PLATFORM_ID) platformId: object
   ) {
-    this.apSlug = this.route.snapshot.paramMap.get('ap') || '';
-
-    // ✅ GLOBAL: si apSlug === 'global' entonces apName vacío => trae TODO
-    this.apName = this.apSlug === 'global' ? '' : this.fromSlug(this.apSlug);
-
-    this.load();
+    this.isBrowser = isPlatformBrowser(platformId);
   }
 
+  ngOnInit(): void {
+    if (!this.isBrowser) return;
+
+    const s = combineLatest([this.route.data, this.route.paramMap]).subscribe(([d, pm]) => {
+      const newMode = ((d?.['mode'] as any) || 'AP') as 'GLOBAL' | 'AP';
+      const slug = pm.get('ap') || '';
+
+      this.closeDelete();
+      this.errorMsg = '';
+
+      if (newMode === 'GLOBAL') {
+        this.mode = 'GLOBAL';
+        this.apSlug = 'global';
+        this.apName = '';
+        this.page = 1;
+        this.load();
+        return;
+      }
+
+      this.mode = 'AP';
+
+      if (!slug) {
+        this.apSlug = '';
+        this.apName = '';
+        this.devices = [];
+        this.loading = false;
+        return;
+      }
+
+      const changed = slug !== this.apSlug;
+      this.apSlug = slug;
+      this.apName = this.fromSlug(slug);
+
+      if (changed) {
+        this.q = '';
+        this.page = 1;
+        this.sortKey = 'createdAt';
+        this.sortDir = 'desc';
+      }
+
+      this.load();
+    });
+
+    this.sub.add(s);
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+    this.clearTimer('load');
+    this.clearTimer('export');
+    this.clearTimer('delete');
+  }
+
+  title(): string {
+    return this.mode === 'GLOBAL' ? 'Inventario global' : `Inventario — ${this.apName}`;
+  }
+
+  subtitle(): string {
+    return this.mode === 'GLOBAL'
+      ? 'Busca por MAC, dueño, punto, AP o registrado por.'
+      : 'Visualización por AP. Cada registro muestra quién lo creó.';
+  }
+
+  // -------------------
+  // ✅ LOAD (anti-cuelgue)
+  // -------------------
   load() {
+    if (!this.isBrowser) return;
+
+    this.closeDelete();
+    this.errorMsg = '';
     this.loading = true;
 
-    this.devicesService.getDevices(this.apName, this.q).subscribe({
-      next: (items) => {
-        this.devices = items || [];
-        this.loading = false;
-
-        const maxPage = this.totalPages;
-        if (this.page > maxPage) this.page = Math.max(1, maxPage);
-      },
-      error: (err) => {
-        this.loading = false;
-        alert(err?.error?.message || 'No se pudo cargar el inventario.');
-      }
+    this.startTimer('load', () => {
+      // si en 16s no respondió, cortamos loading y mostramos error
+      this.loading = false;
+      this.devices = [];
+      this.errorMsg =
+        '⏱️ No hubo respuesta del servidor en 16s. Revisa backend (http://localhost:4000) / CORS / token.';
     });
+
+    const apFilterName = this.mode === 'GLOBAL' ? '' : this.apName;
+    const apFilterSlug = this.mode === 'GLOBAL' ? '' : this.apSlug;
+
+    const s = this.devicesService.getDevices(apFilterName, this.q, apFilterSlug).pipe(
+      catchError((err) => {
+        this.devices = [];
+        this.errorMsg = err?.error?.message || `No se pudo cargar el inventario. (${err?.status || 'sin status'})`;
+        return of([] as Device[]);
+      }),
+      finalize(() => {
+        this.clearTimer('load');
+        this.loading = false;
+      })
+    ).subscribe((items) => {
+      this.devices = items || [];
+      const maxPage = this.totalPages;
+      if (this.page > maxPage) this.page = Math.max(1, maxPage);
+    });
+
+    this.sub.add(s);
   }
 
-  titleLabel(): string {
-    return this.apSlug === 'global' ? 'GLOBAL (Todos los APs)' : this.apName;
-  }
-
-  search() {
-    this.page = 1;
-    this.load();
-  }
-
-  clear() {
-    this.q = '';
-    this.page = 1;
-    this.load();
-  }
+  search() { this.page = 1; this.load(); }
+  clear() { this.q = ''; this.page = 1; this.load(); }
 
   setSort(key: SortKey) {
-    if (this.sortKey === key) {
-      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-    } else {
+    if (this.sortKey === key) this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    else {
       this.sortKey = key;
       this.sortDir = key === 'createdAt' ? 'desc' : 'asc';
     }
@@ -119,53 +212,78 @@ export class DevicesList {
     return Math.max(1, Math.ceil(this.devices.length / this.pageSize));
   }
 
-  next() {
-    if (this.page < this.totalPages) this.page++;
-  }
-
-  prev() {
-    if (this.page > 1) this.page--;
-  }
+  next() { if (this.page < this.totalPages) this.page++; }
+  prev() { if (this.page > 1) this.page--; }
 
   exportExcel() {
-    // ✅ Si es global => exporta todos (sin ap)
-    const apParam = this.apSlug === 'global' ? undefined : this.apName;
+    this.errorMsg = '';
 
-    this.devicesService.exportExcel(apParam).subscribe({
-      next: (blob) => downloadBlob(blob, `Inventario_${this.apSlug || 'dashboard'}.xlsx`),
-      error: (err) => alert(err?.error?.message || 'No se pudo exportar.')
+    this.startTimer('export', () => {
+      this.errorMsg = '⏱️ Exportación sin respuesta en 16s. Revisa backend.';
     });
+
+    const apName = this.mode === 'GLOBAL' ? '' : this.apName;
+    const apSlug = this.mode === 'GLOBAL' ? '' : this.apSlug;
+
+    const s = this.devicesService.exportExcel(apName, apSlug).pipe(
+      catchError((err) => {
+        this.errorMsg = err?.error?.message || 'No se pudo exportar.';
+        return of(null as any);
+      }),
+      finalize(() => this.clearTimer('export'))
+    ).subscribe((blob) => {
+      if (!blob) return;
+      const name = this.mode === 'GLOBAL'
+        ? `Inventario_GLOBAL.xlsx`
+        : `Inventario_${this.apSlug}.xlsx`;
+      downloadBlob(blob, name);
+    });
+
+    this.sub.add(s);
   }
 
   importExcel() {
-    // ✅ Import requiere AP, no global (tu negocio)
-    if (this.apSlug === 'global') {
-      alert('Para importar, selecciona un AP específico.');
+    if (this.mode === 'GLOBAL') {
+      this.errorMsg = 'La importación es por AP. Entra a un AP específico.';
       return;
     }
     this.router.navigateByUrl(`/inventory/${this.apSlug}/import`);
   }
 
   newDevice() {
-    if (this.apSlug === 'global') {
-      alert('Para crear registros, selecciona un AP específico.');
+    if (this.mode === 'GLOBAL') {
+      this.errorMsg = 'El registro manual es por AP. Entra a un AP específico.';
       return;
     }
     this.router.navigateByUrl(`/inventory/${this.apSlug}/new`);
   }
 
+  // ✅ Edit: GLOBAL -> usa el AP real del registro
   edit(d: Device) {
     if (!d._id) return;
 
-    // ✅ Si estás en global, edit igual debe abrir con su ap real
-    const slug = this.toSlug(d.apName || this.apName);
-    this.router.navigateByUrl(`/inventory/${slug}/${d._id}/edit`);
+    if (this.mode === 'GLOBAL') {
+      const realSlug = this.toSlug(d.apName || '');
+      if (!realSlug) {
+        this.errorMsg = 'Este registro no tiene AP válido.';
+        return;
+      }
+      this.router.navigateByUrl(`/inventory/${realSlug}/${d._id}/edit`);
+      return;
+    }
+
+    // modo AP: usa el AP actual
+    this.router.navigateByUrl(`/inventory/${this.apSlug}/${d._id}/edit`);
   }
 
+  // -----------------------------
+  // Modal eliminar (anti-cuelgue)
+  // -----------------------------
   openDelete(d: Device) {
     this.toDelete = d;
     this.confirmOpen = true;
     this.modalError = '';
+    this.deleting = false;
   }
 
   closeDelete() {
@@ -176,32 +294,64 @@ export class DevicesList {
   }
 
   confirmDelete() {
-    if (!this.toDelete?._id) return;
+    if (!this.toDelete?._id || this.deleting) return;
 
     this.deleting = true;
     this.modalError = '';
 
-    this.devicesService.deleteDevice(this.toDelete._id).subscribe({
-      next: () => {
-        this.deleting = false;
-        this.closeDelete();
-        this.load();
-      },
-      error: (err) => {
-        this.deleting = false;
-        this.modalError = err?.error?.message || 'No se pudo eliminar.';
-      }
+    this.startTimer('delete', () => {
+      this.deleting = false;
+      this.modalError = '⏱️ Eliminar sin respuesta en 16s. Revisa backend.';
     });
+
+    const s = this.devicesService.deleteDevice(this.toDelete._id).pipe(
+      catchError((err) => {
+        this.modalError = err?.error?.message || 'No se pudo eliminar.';
+        return of(null as any);
+      }),
+      finalize(() => {
+        this.clearTimer('delete');
+        this.deleting = false;
+      })
+    ).subscribe((resp) => {
+      if (!resp) return;
+      this.closeDelete();
+      this.load();
+    });
+
+    this.sub.add(s);
   }
 
   private fromSlug(slug: string): string {
-    return slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    return String(slug || '').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
-  private toSlug(name: string): string {
-    return String(name || '')
+  private toSlug(ap: string): string {
+    return String(ap || '')
       .toLowerCase()
+      .trim()
       .replace(/\s+/g, '-')
       .replace(/[^\w-]/g, '');
+  }
+
+  private startTimer(kind: 'load' | 'export' | 'delete', onFire: () => void) {
+    this.clearTimer(kind);
+    const t = setTimeout(onFire, 16000);
+    if (kind === 'load') this.loadTimer = t;
+    if (kind === 'export') this.exportTimer = t;
+    if (kind === 'delete') this.deleteTimer = t;
+  }
+
+  private clearTimer(kind: 'load' | 'export' | 'delete') {
+    const t =
+      kind === 'load' ? this.loadTimer :
+      kind === 'export' ? this.exportTimer :
+      this.deleteTimer;
+
+    if (t) clearTimeout(t);
+
+    if (kind === 'load') this.loadTimer = null;
+    if (kind === 'export') this.exportTimer = null;
+    if (kind === 'delete') this.deleteTimer = null;
   }
 }

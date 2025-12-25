@@ -25,8 +25,9 @@ export class Login {
   hudText = 'Inicializando sistema…';
   hudProgress = 0;
 
-  // 3D
   private isBrowser = false;
+
+  // 3D
   tiltX = 0;
   tiltY = 0;
   px = 0;
@@ -45,19 +46,33 @@ export class Login {
   onSubmit() {
     if (this.loading) return;
 
+    const user = this.username.trim();
+    if (!user || !this.password) {
+      this.error = 'Ingresa usuario y contraseña.';
+      return;
+    }
+
     this.error = '';
     this.loading = true;
+
     this.startHud();
 
-    this.auth.login(this.username.trim(), this.password).subscribe({
+    this.auth.login(user, this.password).subscribe({
       next: () => {
         this.hudText = 'Acceso concedido';
         this.hudProgress = 100;
-        setTimeout(() => this.router.navigateByUrl('/'), 600);
+
+        // ✅ apagar loading (para que no quede pegado)
+        this.loading = false;
+
+        setTimeout(() => this.router.navigateByUrl('/'), 500);
       },
       error: (err) => {
+        // ✅ bajar estado visual completo
         this.loading = false;
         this.hudProgress = 0;
+        this.hudText = 'Error de acceso';
+
         this.error = err?.error?.message || 'Credenciales inválidas.';
       }
     });

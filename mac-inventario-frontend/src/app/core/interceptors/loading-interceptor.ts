@@ -8,7 +8,6 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   const loading = inject(LoadingService);
   const platformId = inject(PLATFORM_ID);
 
-  // ✅ En SSR no mostramos loader
   if (!isPlatformBrowser(platformId)) return next(req);
 
   loading.show();

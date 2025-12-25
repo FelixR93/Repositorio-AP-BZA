@@ -1,8 +1,61 @@
 .foot{
+  margin-top: auto;
+  background: rgba(7,10,20,.85);
+  border-top: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(14px);
+  color: #eaf0ff;
+}
+
+.foot-inner{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap: 12px;
   padding: 12px 18px;
-  background:#070a14;
-  border-top:1px solid rgba(255,255,255,.08);
-  color:#eaf0ff;
-  opacity:.85;
-  font-size:12px;
+  font-size: 12px;
+  opacity: .88;
+}
+
+/* Left */
+.left{
+  display:flex;
+  flex-direction:column;
+  gap: 3px;
+}
+.company{
+  font-weight: 950;
+  letter-spacing: .3px;
+}
+.areas{
+  opacity: .72;
+}
+
+/* Right */
+.right{
+  display:flex;
+  align-items:center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.app{
+  font-weight: 900;
+  opacity: .95;
+}
+.sep{
+  opacity: .6;
+}
+.year{
+  opacity: .8;
+}
+
+/* Responsive */
+@media (max-width: 600px){
+  .foot-inner{
+    flex-direction: column;
+    text-align: center;
+    gap: 6px;
+  }
+  .right{
+    order: -1;
+  }
 }

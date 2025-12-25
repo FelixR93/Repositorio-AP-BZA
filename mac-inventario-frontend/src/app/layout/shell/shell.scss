@@ -1,11 +1,347 @@
-.shell{
-  min-height: 100vh;
+/* =================================================
+   SHELL - Layout moderno SaaS (Sidebar + Topbar pill)
+   ================================================= */
+
+.layout{
   display:flex;
-  flex-direction:column;
-}
-.content{
-  flex:1;
-  padding: 16px 18px;
-  background: #0b1020;
+  min-height: 100vh;
+  background: #050914;
   color: #eaf0ff;
+  overflow-x: hidden; /* ✅ evita blancos laterales */
+}
+
+/* -------------------------
+   Backdrop móvil
+   ------------------------- */
+.backdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  z-index: 40;
+}
+
+/* =================================================
+   SIDEBAR
+   ================================================= */
+.sidebar{
+  width: 280px;
+  flex: 0 0 280px;
+
+  background: rgba(255,255,255,.05);
+  border-right: 1px solid rgba(255,255,255,.10);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+
+  display:flex;
+  flex-direction: column;
+  padding: 12px;
+  color: #eaf0ff;
+}
+
+.sb-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap: 10px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  cursor:pointer;
+  text-decoration:none;
+  color: inherit;
+}
+
+.logo{
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 990;
+  background: rgba(79,155,255,.18);
+  border: 1px solid rgba(79,155,255,.22);
+}
+
+.btxt .t1{ font-weight: 990; letter-spacing:.4px; }
+.btxt .t2{ font-size: 12px; opacity:.72; margin-top: 2px; }
+
+.x{
+  border:none;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  color:#eaf0ff;
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor:pointer;
+  display:none;
+}
+
+/* Usuario */
+.sb-user{
+  margin-top: 12px;
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.u-avatar{
+  width: 40px;
+  height: 40px;
+  border-radius: 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 990;
+  background: rgba(79,155,255,.18);
+  border: 1px solid rgba(79,155,255,.22);
+}
+
+.u-name{ font-weight: 980; font-size: 12px; }
+.u-role{ font-size: 11px; opacity:.70; margin-top: 2px; }
+
+/* Navegación */
+.sb-nav{
+  margin-top: 12px;
+  display:flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sb-nav a,
+.nav-dd{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 14px;
+  text-decoration:none;
+  color:#eaf0ff;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor:pointer;
+  font-weight: 950;
+  font-size: 12px;
+}
+
+.sb-nav a:hover,
+.nav-dd:hover{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.08);
+}
+
+.sb-nav a.active{
+  background: rgba(79,155,255,.14);
+  border-color: rgba(79,155,255,.18);
+}
+
+.ic{
+  width: 22px;
+  display:inline-flex;
+  justify-content:center;
+}
+
+.nav-dd{
+  width: 100%;
+  justify-content:space-between;
+}
+
+.nav-dd .chev{
+  transition: transform .2s ease;
+}
+.nav-dd.open .chev{
+  transform: rotate(180deg);
+}
+
+/* APs */
+.ap-list{
+  margin: 2px 0 6px 32px;
+  display:flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ap-item{
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(0,0,0,.14);
+  color:#eaf0ff;
+  cursor:pointer;
+  font-weight: 900;
+  font-size: 12px;
+  text-decoration: none;
+  display: block;
+}
+.ap-item:hover{ background: rgba(255,255,255,.06); }
+
+/* ✅ ACTIVE en AP seleccionado */
+.ap-item.active{
+  background: rgba(79,155,255,.16);
+  border-color: rgba(79,155,255,.22);
+}
+
+/* Footer sidebar */
+.sb-foot{
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-out{
+  border:none;
+  border-radius: 14px;
+  padding: 10px;
+  cursor:pointer;
+  font-weight: 990;
+  background: rgba(79,155,255,.92);
+  color:#061022;
+}
+
+.sb-mini{
+  font-size: 11px;
+  opacity: .72;
+  text-align:center;
+}
+
+/* =================================================
+   MAIN
+   ================================================= */
+.main{
+  flex: 1;
+  min-width: 0;
+  display:flex;
+  flex-direction: column;
+  background: #050914;
+}
+
+/* =================================================
+   TOPBAR FLOTANTE (pill)
+   ================================================= */
+.topwrap{
+  position: sticky;
+  top: 10px;
+  z-index: 30;
+  display:flex;
+  justify-content:center;
+  padding: 0 12px;
+}
+
+.topbar{
+  width: fit-content;
+  max-width: calc(100vw - 24px);
+
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  padding: 10px 12px;
+
+  border-radius: 999px;
+  background: rgba(10,14,28,.78);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 16px 45px rgba(0,0,0,.35);
+  backdrop-filter: blur(14px);
+}
+
+/* Burger */
+.burger{
+  border:none;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color:#eaf0ff;
+  border-radius: 999px;
+  padding: 8px 10px;
+  cursor:pointer;
+  display:none;
+}
+
+/* Título */
+.tb-title{
+  min-width: 0;
+}
+.tb-title .line1{
+  font-weight: 990;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+.tb-title .line2{
+  font-size: 11px;
+  opacity:.72;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+
+/* Usuario */
+.tb-right{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+.tb-user{
+  text-align:right;
+}
+.tb-user .name{ font-size: 12px; font-weight: 980; }
+.tb-user .role{ font-size: 11px; opacity:.70; }
+
+/* Salir */
+.tb-out{
+  border:none;
+  border-radius: 999px;
+  padding: 9px 12px;
+  cursor:pointer;
+  font-weight: 990;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color:#eaf0ff;
+}
+.tb-out:hover{ background: rgba(255,255,255,.08); }
+
+/* =================================================
+   CONTENT
+   ================================================= */
+.content{
+  padding: 12px 10px 20px;
+  background: #050914;
+  color: #eaf0ff;
+  min-width: 0;
+}
+
+/* =================================================
+   RESPONSIVE
+   ================================================= */
+@media (max-width: 980px){
+  .sidebar{
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 50;
+    transform: translateX(-105%);
+    transition: transform .22s ease;
+  }
+  .layout.sidebar-open .sidebar{
+    transform: translateX(0);
+  }
+
+  .x{ display:inline-flex; }
+  .burger{ display:inline-flex; }
+}
+
+@media (max-width: 520px){
+  .tb-user{ display:none; }
+  .tb-title .line1,
+  .tb-title .line2{ max-width: 220px; }
 }

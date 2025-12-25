@@ -45,7 +45,6 @@ export class DevicesImport {
   error = '';
   result: ImportResponse | null = null;
 
-  // ✅ Usuario real (del AuthService)
   user: User | null = null;
 
   constructor(
@@ -57,13 +56,12 @@ export class DevicesImport {
     this.apSlug = this.route.snapshot.paramMap.get('ap') || '';
     this.apName = this.fromSlug(this.apSlug);
 
-    // ✅ SSR-safe: se asigna luego del constructor
     this.user = this.auth.getUser();
     this.auth.user$.subscribe((u) => (this.user = u));
   }
 
   get importUserName(): string {
-    return this.user?.fullName || this.user?.username || 'N/D';
+    return (this.user as any)?.fullName || (this.user as any)?.username || 'N/D';
   }
 
   onFileChange(ev: Event) {
@@ -99,9 +97,8 @@ export class DevicesImport {
 
     this.uploading = true;
 
-    // ✅ ORDEN CORRECTO
     this.devicesService.importExcel(this.file, this.apName).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.uploading = false;
         this.result = {
           ...res,
@@ -110,7 +107,7 @@ export class DevicesImport {
           failed: res.failed || [],
         };
       },
-      error: (err) => {
+      error: (err: any) => {
         this.uploading = false;
         this.error = err?.error?.message || 'No se pudo importar el archivo.';
       },
@@ -118,13 +115,12 @@ export class DevicesImport {
   }
 
   back() {
-    // ✅ botón vuelve directo a inventario del AP
     this.router.navigateByUrl(`/inventory/${this.apSlug}`);
   }
 
   downloadTemplate() {
     this.devicesService.downloadTemplate(this.apName).subscribe({
-      next: (blob) => {
+      next: (blob: Blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -132,7 +128,7 @@ export class DevicesImport {
         a.click();
         URL.revokeObjectURL(url);
       },
-      error: (err) => alert(err?.error?.message || 'No se pudo descargar la plantilla.'),
+      error: (err: any) => alert(err?.error?.message || 'No se pudo descargar la plantilla.'),
     });
   }
 

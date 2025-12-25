@@ -1,5 +1,5 @@
 export type DeviceType = 'MOVIL' | 'LAPTOP' | 'PC';
-export type AreaType = 'CONTROL' | 'SEGURIDAD' | 'MONITOREO';
+export type AreaType = 'MOLINOS' | 'MINA' | 'SEGURIDAD';
 
 export interface Device {
   _id?: string;

@@ -8,4 +8,9 @@ import { Component } from '@angular/core';
 })
 export class Footer {
   year = new Date().getFullYear();
+
+  // Opcional (si luego quieres mostrar versión)
+  appName = 'Inventario MAC';
+  company = 'EXPORTADORA AURÍFERA BONANZA (EXPAUSA.SA)';
+  areas = 'Control • Seguridad • Monitoreo';
 }

@@ -1,0 +1,57 @@
+/* =========================
+   GLOBAL RESET (ANTI-BLANCO)
+   ========================= */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #050914;   /* tu fondo dark */
+  color: #EAF0FF;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Angular root */
+app-root {
+  display: block;
+  min-height: 100vh;
+  background: #050914;
+}
+
+/* Evita “saltitos” raros y bordes */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+.table.card {
+  padding: 0;           /* importante: evita “aire” extra */
+  background: rgba(0,0,0,.18);
+  overflow: hidden;
+}
+
+/* el scroll SOLO para la tabla */
+.table.card .table,
+.table.card table {
+  width: 100%;
+}
+
+/* si tu .table ya es el contenedor scroll: */
+.table {
+  overflow: auto;
+  border-radius: 14px;
+}
+/* suaviza textos y mejora legibilidad */
+.page, .dash {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* evita que el contenido quede “chico” en pantallas grandes */
+.page, .dash {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
