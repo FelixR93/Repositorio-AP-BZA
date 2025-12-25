@@ -1,28 +1,30 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { AuthService } from '../services/auth';
 
-function isPublic(url: string) {
-  return url.includes('/api/auth/login') || url.includes('/api/auth/register');
-}
+const TOKEN_KEY = 'bonanza_token';
+const API_BASE_URL = 'http://localhost:4000/api';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const auth = inject(AuthService);
   const platformId = inject(PLATFORM_ID);
+  const isBrowser = isPlatformBrowser(platformId);
 
-  // ✅ SSR: sin token
-  if (!isPlatformBrowser(platformId)) return next(req);
+  // Solo aplica a tu API
+  const isApi = req.url.startsWith(API_BASE_URL);
+  if (!isApi) return next(req);
 
-  // ✅ rutas públicas: sin token
-  if (isPublic(req.url)) return next(req);
+  // No meter token en login
+  if (req.url.includes('/auth/login')) return next(req);
 
-  const token = auth.getToken();
+  // En servidor no hay localStorage
+  if (!isBrowser) return next(req);
+
+  const token = localStorage.getItem(TOKEN_KEY);
   if (!token) return next(req);
 
   return next(
     req.clone({
-      setHeaders: { Authorization: `Bearer ${token}` }
+      setHeaders: { Authorization: `Bearer ${token}` },
     })
   );
 };

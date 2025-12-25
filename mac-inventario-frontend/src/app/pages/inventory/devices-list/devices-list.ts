@@ -72,6 +72,7 @@ export class DevicesList implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (!this.isBrowser) return;
 
+    // ✅ data (mode) + paramMap (ap) juntos, 1 sola suscripción (evita doble load)
     const s = combineLatest([this.route.data, this.route.paramMap]).subscribe(([d, pm]) => {
       const newMode = ((d?.['mode'] as any) || 'AP') as 'GLOBAL' | 'AP';
       const slug = pm.get('ap') || '';
@@ -79,6 +80,7 @@ export class DevicesList implements OnInit, OnDestroy {
       this.closeDelete();
       this.errorMsg = '';
 
+      // GLOBAL
       if (newMode === 'GLOBAL') {
         this.mode = 'GLOBAL';
         this.apSlug = 'global';
@@ -88,6 +90,7 @@ export class DevicesList implements OnInit, OnDestroy {
         return;
       }
 
+      // AP
       this.mode = 'AP';
 
       if (!slug) {
@@ -143,20 +146,21 @@ export class DevicesList implements OnInit, OnDestroy {
     this.loading = true;
 
     this.startTimer('load', () => {
-      // si en 16s no respondió, cortamos loading y mostramos error
       this.loading = false;
       this.devices = [];
       this.errorMsg =
         '⏱️ No hubo respuesta del servidor en 16s. Revisa backend (http://localhost:4000) / CORS / token.';
     });
 
+    // ✅ SOLO apName (backend filtra por req.query.ap)
     const apFilterName = this.mode === 'GLOBAL' ? '' : this.apName;
-    const apFilterSlug = this.mode === 'GLOBAL' ? '' : this.apSlug;
 
-    const s = this.devicesService.getDevices(apFilterName, this.q, apFilterSlug).pipe(
+    const s = this.devicesService.getDevices(apFilterName, this.q).pipe(
       catchError((err) => {
         this.devices = [];
-        this.errorMsg = err?.error?.message || `No se pudo cargar el inventario. (${err?.status || 'sin status'})`;
+        this.errorMsg =
+          err?.error?.message ||
+          `No se pudo cargar el inventario. (${err?.status || 'sin status'})`;
         return of([] as Device[]);
       }),
       finalize(() => {
@@ -222,10 +226,10 @@ export class DevicesList implements OnInit, OnDestroy {
       this.errorMsg = '⏱️ Exportación sin respuesta en 16s. Revisa backend.';
     });
 
+    // ✅ SOLO apName
     const apName = this.mode === 'GLOBAL' ? '' : this.apName;
-    const apSlug = this.mode === 'GLOBAL' ? '' : this.apSlug;
 
-    const s = this.devicesService.exportExcel(apName, apSlug).pipe(
+    const s = this.devicesService.exportExcel(apName).pipe(
       catchError((err) => {
         this.errorMsg = err?.error?.message || 'No se pudo exportar.';
         return of(null as any);
@@ -233,9 +237,11 @@ export class DevicesList implements OnInit, OnDestroy {
       finalize(() => this.clearTimer('export'))
     ).subscribe((blob) => {
       if (!blob) return;
+
       const name = this.mode === 'GLOBAL'
         ? `Inventario_GLOBAL.xlsx`
         : `Inventario_${this.apSlug}.xlsx`;
+
       downloadBlob(blob, name);
     });
 
@@ -272,7 +278,6 @@ export class DevicesList implements OnInit, OnDestroy {
       return;
     }
 
-    // modo AP: usa el AP actual
     this.router.navigateByUrl(`/inventory/${this.apSlug}/${d._id}/edit`);
   }
 

@@ -1,24 +1,31 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class LoadingService {
-  private count = 0;
-  private _loading$ = new BehaviorSubject<boolean>(false);
-  loading$ = this._loading$.asObservable();
+  private pending = 0;
+  private readonly _loading$ = new BehaviorSubject<boolean>(false);
 
-  show() {
-    this.count++;
-    if (this.count === 1) this._loading$.next(true);
+  get loading$(): Observable<boolean> {
+    return this._loading$.asObservable();
   }
 
-  hide() {
-    this.count = Math.max(0, this.count - 1);
-    if (this.count === 0) this._loading$.next(false);
+  show(): void {
+    this.pending++;
+    if (this.pending === 1) {
+      queueMicrotask(() => this._loading$.next(true));
+    }
   }
 
-  reset() {
-    this.count = 0;
-    this._loading$.next(false);
+  hide(): void {
+    if (this.pending > 0) this.pending--;
+    if (this.pending === 0) {
+      queueMicrotask(() => this._loading$.next(false));
+    }
+  }
+
+  reset(): void {
+    this.pending = 0;
+    queueMicrotask(() => this._loading$.next(false));
   }
 }

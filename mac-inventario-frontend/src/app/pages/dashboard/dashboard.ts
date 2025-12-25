@@ -6,12 +6,14 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subscription, finalize } from 'rxjs';
 
 import { APS } from '../../core/constants/aps.const';
 import { StatsService, DashboardStats } from '../../core/services/stats';
 import { AuthService } from '../../core/services/auth';
 import { User } from '../../core/models/user.model';
+import { RouterLink } from '@angular/router';
 
 type DeviceType = 'MOVIL' | 'LAPTOP' | 'PC';
 type AreaType = 'MOLINOS' | 'MINA' | 'SEGURIDAD';
@@ -20,7 +22,7 @@ type ApItem = { ap: string; count: number; percent: number };
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +46,14 @@ export class Dashboard implements OnInit, OnDestroy {
 
   // UI
   apsModalOpen = false;
+
+  // ----------------------------
+  // Bitácora UI (paginación + filtros)
+  // ----------------------------
+  logPage = 1;
+  logPageSize = 8;
+  logQuery = '';
+  logAction: 'ALL' | 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'LOGIN' = 'ALL';
 
   private sub = new Subscription();
 
@@ -110,10 +120,62 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   // ----------------------------
+  // Bitácora computed
+  // ----------------------------
+  get filteredLogs(): DashboardStats['recent'] {
+    const q = this.logQuery.trim().toLowerCase();
+
+    return (this.logs || []).filter((l: any) => {
+      const action = String(l?.action || '').toUpperCase();
+
+      if (this.logAction !== 'ALL' && action !== this.logAction) return false;
+      if (!q) return true;
+
+      const text =
+        `${l?.message || ''} ${l?.userName || ''} ${l?.role || ''} ${l?.ip || ''} ${l?.apName || ''} ${l?.mac || ''}`
+          .toLowerCase();
+
+      return text.includes(q);
+    });
+  }
+
+  get logTotal(): number {
+    return this.filteredLogs.length;
+  }
+
+  get logTotalPages(): number {
+    return Math.max(1, Math.ceil(this.logTotal / this.logPageSize));
+  }
+
+  get pagedLogs(): DashboardStats['recent'] {
+    const start = (this.logPage - 1) * this.logPageSize;
+    return this.filteredLogs.slice(start, start + this.logPageSize);
+  }
+
+  setLogPage(p: number) {
+    const next = Math.min(Math.max(1, p), this.logTotalPages);
+    if (next === this.logPage) return;
+    this.logPage = next;
+    this.cdr.markForCheck();
+  }
+
+  prevLogPage() {
+    this.setLogPage(this.logPage - 1);
+  }
+
+  nextLogPage() {
+    this.setLogPage(this.logPage + 1);
+  }
+
+  onLogFilterChange() {
+    this.logPage = 1;
+    this.cdr.markForCheck();
+  }
+
+  // ----------------------------
   // Actions
   // ----------------------------
   refresh() {
-    // evita dobles clicks
     if (this.loading) return;
 
     this.error = '';
@@ -125,7 +187,6 @@ export class Dashboard implements OnInit, OnDestroy {
       .getDashboard()
       .pipe(
         finalize(() => {
-          // ✅ SIEMPRE apaga loading
           this.loading = false;
           this.refreshing = false;
           this.cdr.markForCheck();
@@ -177,22 +238,27 @@ export class Dashboard implements OnInit, OnDestroy {
     this.total = data?.total || 0;
 
     for (const x of data.byAp || []) {
-      const key = String(x?.apName || '').trim();
+      const key = String((x as any)?.apName || '').trim();
       if (!key) continue;
-      this.byAp[key] = (this.byAp[key] || 0) + (x.count || 0);
+      this.byAp[key] = (this.byAp[key] || 0) + ((x as any).count || 0);
     }
 
     for (const x of data.byType || []) {
-      const k = String(x._id || '').toUpperCase() as DeviceType;
-      if (k === 'MOVIL' || k === 'LAPTOP' || k === 'PC') this.byType[k] = x.count || 0;
+      const k = String((x as any)._id || '').toUpperCase() as DeviceType;
+      if (k === 'MOVIL' || k === 'LAPTOP' || k === 'PC') this.byType[k] = (x as any).count || 0;
     }
 
     for (const x of data.byArea || []) {
-      const k = String(x._id || '').toUpperCase() as AreaType;
-      if (k === 'MOLINOS' || k === 'MINA' || k === 'SEGURIDAD') this.byArea[k] = x.count || 0;
+      const k = String((x as any)._id || '').toUpperCase() as AreaType;
+      if (k === 'MOLINOS' || k === 'MINA' || k === 'SEGURIDAD') this.byArea[k] = (x as any).count || 0;
     }
 
     this.logs = data.recent || [];
+
+    // ✅ reset UI bitácora al refrescar
+    this.logPage = 1;
+    this.logQuery = '';
+    this.logAction = 'ALL';
   }
 
   apPercent(ap: string): number {

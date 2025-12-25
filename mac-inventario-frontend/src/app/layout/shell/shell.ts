@@ -6,12 +6,15 @@ import {
   RouterLinkActive,
   RouterOutlet,
   NavigationEnd,
+  NavigationCancel,
+  NavigationError,
 } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth';
 import { APS } from '../../core/constants/aps.const';
 import { User } from '../../core/models/user.model';
+import { LoadingService } from '../../core/services/loading';
 
 @Component({
   selector: 'app-shell',
@@ -26,25 +29,44 @@ export class Shell implements OnDestroy {
   user: User | null = null;
 
   // UI
-  sidebarOpen = false; // móvil
+  sidebarOpen = false;
   apOpen = false;
 
   year = new Date().getFullYear();
 
   private sub = new Subscription();
 
-  constructor(private auth: AuthService, public router: Router) {
+  constructor(
+    private auth: AuthService,
+    public router: Router,
+    public loading: LoadingService
+  ) {
+    // usuario inicial (desde BehaviorSubject)
     this.user = this.auth.getUser();
+
+    // suscripción a cambios de usuario
     this.sub.add(this.auth.user$.subscribe((u) => (this.user = u)));
 
-    // ✅ cada navegación: cierra sidebar en móvil
+    // ✅ UN SOLO listener para navegación:
+    // - cierra sidebar/ap dropdown
+    // - resetea loader si la navegación termina/cancela/falla
     this.sub.add(
       this.router.events
-        .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+        .pipe(
+          filter(
+            (e) =>
+              e instanceof NavigationEnd ||
+              e instanceof NavigationCancel ||
+              e instanceof NavigationError
+          )
+        )
         .subscribe(() => {
+          // cerrar UI
           this.apOpen = false;
-          // si está abierto en móvil, ciérralo al navegar
           if (this.sidebarOpen) this.closeSidebar();
+
+          // anti “cargando pegado”
+          this.loading.reset();
         })
     );
   }
@@ -53,6 +75,9 @@ export class Shell implements OnDestroy {
     this.sub.unsubscribe();
   }
 
+  // -----------------------------
+  // computed
+  // -----------------------------
   get isAdmin(): boolean {
     return (this.user as any)?.role === 'ADMIN';
   }
@@ -66,6 +91,9 @@ export class Shell implements OnDestroy {
     return (this.user as any)?.role || '—';
   }
 
+  // -----------------------------
+  // UI actions
+  // -----------------------------
   toggleSidebar() {
     this.sidebarOpen = !this.sidebarOpen;
     if (!this.sidebarOpen) this.apOpen = false;
@@ -80,8 +108,6 @@ export class Shell implements OnDestroy {
     this.apOpen = !this.apOpen;
   }
 
-
-
   logout() {
     this.closeSidebar();
     this.auth.logout();
@@ -93,7 +119,9 @@ export class Shell implements OnDestroy {
     this.closeSidebar();
   }
 
-  // ✅ helper para active manual (APs)
+  // -----------------------------
+  // helpers
+  // -----------------------------
   isApActive(ap: string): boolean {
     const slug = this.toSlug(ap);
     const url = this.router.url || '';

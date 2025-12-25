@@ -13,40 +13,69 @@ import { DevicesList } from './pages/inventory/devices-list/devices-list';
 import { DevicesForm } from './pages/inventory/devices-form/devices-form';
 import { DevicesImport } from './pages/inventory/devices-import/devices-import';
 
+// ✅ NUEVO (bitácora completa)
+import { Logs } from './pages/logs/logs';
+
 import { authGuard } from './core/guards/auth-guard';
 import { roleGuard } from './core/guards/role-guard';
 
 export const routes: Routes = [
-  // Login fuera del Shell
+  // -------------------------
+  // Public
+  // -------------------------
   { path: 'login', component: Login },
 
-  // App protegida dentro del Shell (Navbar + Footer)
+  // -------------------------
+  // Protected App (Shell)
+  // -------------------------
   {
     path: '',
     component: Shell,
     canActivate: [authGuard],
     children: [
-      { path: '', component: Dashboard },
+      // Home
+      { path: '', component: Dashboard, pathMatch: 'full' },
 
+      // -------------------------
+      // Inventory
+      // -------------------------
       // Inventory home = selector de APs + acceso a Global
-      { path: 'inventory', component: ApTabs },
+      { path: 'inventory', component: ApTabs, pathMatch: 'full' },
 
-      // Global (todos los APs)
-      { path: 'inventory/global', component: DevicesList, data: { mode: 'GLOBAL' } },
+      // ✅ Global (todos los APs) — ANTES que inventory/:ap
+      {
+        path: 'inventory/global',
+        component: DevicesList,
+        data: { mode: 'GLOBAL' },
+        pathMatch: 'full',
+      },
 
-      // AP específico
-      { path: 'inventory/:ap', component: DevicesList, data: { mode: 'AP' } },
+      // ✅ RUTAS ESPECÍFICAS PRIMERO (new/import/edit)
+      { path: 'inventory/:ap/new', component: DevicesForm, pathMatch: 'full' },
+      { path: 'inventory/:ap/import', component: DevicesImport, pathMatch: 'full' },
+      { path: 'inventory/:ap/:id/edit', component: DevicesForm, pathMatch: 'full' },
 
-      // NUEVO (sin id)
-      { path: 'inventory/:ap/new', component: DevicesForm },
+      // ✅ AP específico (listado) — AL FINAL
+      {
+        path: 'inventory/:ap',
+        component: DevicesList,
+        data: { mode: 'AP' },
+        pathMatch: 'full',
+      },
 
-      // IMPORT
-      { path: 'inventory/:ap/import', component: DevicesImport },
+      // -------------------------
+      // Logs (ADMIN)
+      // -------------------------
+      {
+        path: 'logs',
+        component: Logs,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] },
+      },
 
-      // EDIT (con id + /edit)
-      { path: 'inventory/:ap/:id/edit', component: DevicesForm },
-
+      // -------------------------
       // Admin
+      // -------------------------
       {
         path: 'admin/users',
         component: Users,
@@ -54,8 +83,16 @@ export const routes: Routes = [
         data: { roles: ['ADMIN'] },
       },
 
+      // -------------------------
+      // System
+      // -------------------------
       { path: 'forbidden', component: Forbidden },
+
+      // 404 dentro del Shell
       { path: '**', component: NotFound },
     ],
   },
+
+  // Fallback final (por si algo queda fuera)
+  { path: '**', redirectTo: '' },
 ];

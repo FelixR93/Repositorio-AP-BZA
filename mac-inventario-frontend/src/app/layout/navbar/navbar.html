@@ -1,10 +1,9 @@
 <header class="nav">
   <div class="nav-inner">
-
     <!-- Brand -->
     <a routerLink="/" class="brand">
       <div class="logo">
-        <img src="/bonanza.png" alt="MAC Logo">
+        <img src="/bonanza.png" alt="Logo Bonanza" />
       </div>
       <div class="brand-text">
         <div class="t1">BONANZA</div>
@@ -14,24 +13,46 @@
 
     <!-- Main Links -->
     <nav class="links">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact:true }">Dashboard</a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        Dashboard
+      </a>
       <a routerLink="/inventory" routerLinkActive="active">Inventario</a>
       <a routerLink="/inventory/global" routerLinkActive="active">Búsqueda</a>
 
       <!-- AP dropdown -->
       <div class="aps-dd">
-        <button class="dd-btn" (click)="toggleAps()" [class.open]="openAps">
-          📡 APs <span class="chev" [class.up]="openAps">▾</span>
+        <button
+          type="button"
+          class="dd-btn"
+          (click)="toggleAps()"
+          [class.open]="openAps"
+          aria-haspopup="true"
+          [attr.aria-expanded]="openAps"
+        >
+          <span class="ic">📡</span>
+          APs
+          <span class="chev" [class.up]="openAps">▾</span>
         </button>
 
         <div class="dd-panel" *ngIf="openAps">
           <div class="dd-searchbox">
-            <input [(ngModel)]="apQuery" placeholder="Buscar AP…">
+            <input
+              class="dd-search"
+              [(ngModel)]="apQuery"
+              placeholder="Buscar AP…"
+              autocomplete="off"
+            />
           </div>
 
           <div class="dd-list">
-            <button *ngFor="let ap of filteredAps" class="dd-item" (click)="goAp(ap)">
-              <span class="dot"></span>{{ ap }}
+            <button
+              type="button"
+              *ngFor="let ap of filteredAps"
+              class="dd-item"
+              (click)="goAp(ap)"
+            >
+              <span class="ap-dot"></span>
+              <span class="ap-name">{{ ap }}</span>
             </button>
 
             <div class="dd-empty" *ngIf="filteredAps.length === 0">
@@ -42,15 +63,16 @@
       </div>
 
       <a *ngIf="isAdmin" routerLink="/admin/users" routerLinkActive="active">Usuarios</a>
+      <a *ngIf="isAdmin" routerLink="/logs" routerLinkActive="active">Bitácora</a>
     </nav>
 
     <!-- User -->
     <div class="right">
       <div class="me">
-        <div class="name">{{ userLabel }}</div>
-        <div class="role">{{ roleLabel }}</div>
+        <div class="me-name">{{ userLabel }}</div>
+        <div class="me-role">{{ roleLabel }}</div>
       </div>
-      <button class="logout" (click)="logout()">Salir</button>
+      <button type="button" class="btn-out" (click)="logout()">Salir</button>
     </div>
   </div>
 </header>

@@ -11,10 +11,9 @@ export class DevicesService {
   constructor(private http: HttpClient) {}
 
   /** Listar dispositivos (opcional por AP y búsqueda) */
-  getDevices(apName?: string, q?: string, apSlug?: string): Observable<Device[]> {
+  getDevices(apName?: string, q?: string): Observable<Device[]> {
     let params = new HttpParams();
     if (apName) params = params.set('ap', apName);
-    if (apSlug) params = params.set('apSlug', apSlug);
     if (q) params = params.set('q', q);
     return this.http.get<Device[]>(`${API_BASE_URL}/devices`, { params });
   }
@@ -40,10 +39,9 @@ export class DevicesService {
   }
 
   /** Exportar Excel (por AP o todos) */
-  exportExcel(apName?: string, apSlug?: string): Observable<Blob> {
+  exportExcel(apName?: string): Observable<Blob> {
     let params = new HttpParams();
     if (apName) params = params.set('ap', apName);
-    if (apSlug) params = params.set('apSlug', apSlug);
 
     return this.http.get(`${API_BASE_URL}/devices/export`, {
       params,
@@ -52,10 +50,9 @@ export class DevicesService {
   }
 
   /** Descargar plantilla (si existe) */
-  downloadTemplate(apName?: string, apSlug?: string): Observable<Blob> {
+  downloadTemplate(apName?: string): Observable<Blob> {
     let params = new HttpParams();
     if (apName) params = params.set('ap', apName);
-    if (apSlug) params = params.set('apSlug', apSlug);
 
     return this.http.get(`${API_BASE_URL}/devices/template`, {
       params,
@@ -64,13 +61,12 @@ export class DevicesService {
   }
 
   /** Importar Excel */
-  importExcel(file: File, apName?: string, apSlug?: string): Observable<ImportResult> {
+  importExcel(file: File, apName?: string): Observable<ImportResult> {
     const form = new FormData();
     form.append('file', file);
 
     let params = new HttpParams();
     if (apName) params = params.set('ap', apName);
-    if (apSlug) params = params.set('apSlug', apSlug);
 
     return this.http.post<ImportResult>(`${API_BASE_URL}/devices/import`, form, { params });
   }

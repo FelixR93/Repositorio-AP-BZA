@@ -1,0 +1,83 @@
+<div class="wrap">
+  <div class="head card">
+    <div>
+      <div class="ttl">Bitácora completa</div>
+      <div class="sub">Historial de acciones • paginación real • filtros</div>
+    </div>
+
+    <button class="btn" type="button" (click)="load()" [disabled]="loading">
+      <span class="spin" *ngIf="loading"></span>
+      {{ loading ? 'Cargando…' : 'Actualizar' }}
+    </button>
+  </div>
+
+  <div class="card toolbar">
+    <input
+      class="inp"
+      [(ngModel)]="q"
+      (keyup.enter)="applyFilters()"
+      placeholder="Buscar (mensaje, usuario, IP, AP, MAC…)"
+    />
+
+    <select class="sel" [(ngModel)]="action" (change)="applyFilters()">
+      <option value="ALL">Todas</option>
+      <option value="CREATE">CREATE</option>
+      <option value="UPDATE">UPDATE</option>
+      <option value="DELETE">DELETE</option>
+      <option value="IMPORT">IMPORT</option>
+      <option value="LOGIN">LOGIN</option>
+    </select>
+
+    <select class="sel sm" [(ngModel)]="limit" (change)="applyFilters()">
+      <option [ngValue]="10">10</option>
+      <option [ngValue]="20">20</option>
+      <option [ngValue]="30">30</option>
+      <option [ngValue]="50">50</option>
+    </select>
+
+    <div class="meta">Total: <b>{{ total }}</b></div>
+  </div>
+
+  <div class="card state" *ngIf="loading">
+    <div class="pulse"></div>
+    <div>
+      <div class="st">Cargando bitácora…</div>
+      <div class="sb">Consultando servidor</div>
+    </div>
+  </div>
+
+  <div class="card state error" *ngIf="!loading && error">
+    <div>
+      <div class="st">No se pudo cargar</div>
+      <div class="sb">{{ error }}</div>
+    </div>
+  </div>
+
+  <div class="card" *ngIf="!loading && !error">
+    <div class="list">
+      <div class="row" *ngFor="let l of items; trackBy: trackByLog">
+        <div class="left">
+          <span class="badge" [class]="actionClass(l.action)">{{ l.action }}</span>
+        </div>
+
+        <div class="main">
+          <div class="mttl">{{ l.message }}</div>
+          <div class="msub">
+            <b>{{ l.userName }}</b> ({{ l.role }}) • IP: {{ formatIp(l.ip) }} •
+            {{ l.createdAt | date : 'dd/MM/yyyy HH:mm' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="empty" *ngIf="items.length === 0">No hay resultados con estos filtros.</div>
+    </div>
+
+    <div class="pager">
+      <button class="btn ghost" type="button" (click)="prev()" [disabled]="page <= 1">◀</button>
+      <div class="pg">
+        Página <b>{{ page }}</b> / {{ totalPages }}
+      </div>
+      <button class="btn ghost" type="button" (click)="next()" [disabled]="page >= totalPages">▶</button>
+    </div>
+  </div>
+</div>

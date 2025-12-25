@@ -37,7 +37,6 @@
         Dashboard
       </a>
 
-      <!-- ✅ Inventario root: lo controlamos para que vaya a un AP -->
       <a
         routerLink="/inventory"
         routerLinkActive="active"
@@ -60,7 +59,6 @@
         <span class="chev">▾</span>
       </button>
 
-      <!-- ✅ APs con routerLink + active -->
       <div class="ap-list" *ngIf="apOpen">
         <a
           class="ap-item"
@@ -72,6 +70,12 @@
           {{ ap }}
         </a>
       </div>
+
+      <!-- ✅ Bitácora completa (ADMIN) -->
+      <a *ngIf="isAdmin" routerLink="/logs" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="ic">🧾</span>
+        Bitácora
+      </a>
 
       <a
         *ngIf="isAdmin"
@@ -115,6 +119,14 @@
         </div>
       </div>
     </header>
+
+    <!-- ✅ LOADER GLOBAL (opcional) -->
+    <div class="global-loader" *ngIf="loading.loading$ | async">
+      <div class="gl-card">
+        <div class="spinner"></div>
+        <div class="txt">Cargando…</div>
+      </div>
+    </div>
 
     <!-- CONTENT -->
     <main class="content">

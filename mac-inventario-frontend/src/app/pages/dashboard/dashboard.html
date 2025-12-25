@@ -224,17 +224,65 @@
           </div>
         </div>
 
-        <!-- Logs -->
+        <!-- Logs (ADMIN) -->
         <div class="card" *ngIf="isAdmin">
           <div class="card-head">
             <div>
               <div class="card-title">Bitácora</div>
-              <div class="card-sub">Acciones recientes (ADMIN)</div>
+              <div class="card-sub">Acciones recientes (ADMIN) • {{ logTotal }} registro(s)</div>
+            </div>
+            <button class="btn ghost" type="button" routerLink="/logs">
+              Ver bitácora completa
+            </button>
+          </div>
+
+          <!-- Toolbar -->
+          <div class="logs-toolbar">
+            <div class="lt-left">
+              <input
+                class="inp"
+                type="text"
+                placeholder="Buscar en bitácora (usuario, IP, mensaje, AP, MAC)…"
+                [(ngModel)]="logQuery"
+                (input)="onLogFilterChange()"
+              />
+
+              <select class="sel" [(ngModel)]="logAction" (change)="onLogFilterChange()">
+                <option value="ALL">Todas</option>
+                <option value="CREATE">CREATE</option>
+                <option value="UPDATE">UPDATE</option>
+                <option value="DELETE">DELETE</option>
+                <option value="IMPORT">IMPORT</option>
+                <option value="LOGIN">LOGIN</option>
+              </select>
+            </div>
+
+            <div class="lt-right">
+              <button
+                class="btn ghost"
+                type="button"
+                (click)="prevLogPage()"
+                [disabled]="logPage <= 1"
+              >
+                ◀
+              </button>
+              <div class="page">
+                Página <b>{{ logPage }}</b> / {{ logTotalPages }}
+              </div>
+              <button
+                class="btn ghost"
+                type="button"
+                (click)="nextLogPage()"
+                [disabled]="logPage >= logTotalPages"
+              >
+                ▶
+              </button>
             </div>
           </div>
 
-          <div class="logs">
-            <div class="log" *ngFor="let l of logs; trackBy: trackByLog">
+          <!-- Scrollable list -->
+          <div class="logs logs-scroll">
+            <div class="log" *ngFor="let l of pagedLogs; trackBy: trackByLog">
               <div class="l-left">
                 <span class="badge" [class]="actionClass(l.action)">{{ l.action }}</span>
               </div>
@@ -248,7 +296,24 @@
               </div>
             </div>
 
-            <div class="empty" *ngIf="logs.length === 0">No hay acciones registradas todavía.</div>
+            <div class="empty" *ngIf="pagedLogs.length === 0">
+              No hay registros con los filtros actuales.
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="logs-foot">
+            <div class="muted">
+              Mostrando {{ pagedLogs.length }} de {{ logTotal }} • Tamaño página:
+            </div>
+
+            <select class="sel sm" [(ngModel)]="logPageSize" (change)="onLogFilterChange()">
+              <option [ngValue]="6">6</option>
+              <option [ngValue]="8">8</option>
+              <option [ngValue]="10">10</option>
+              <option [ngValue]="12">12</option>
+              <option [ngValue]="15">15</option>
+            </select>
           </div>
         </div>
 
