@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { Device } from '../models/device.model';
 import { ImportResult } from '../models/import-result.model';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = 'http://127.0.0.1:4000/api';
 
 @Injectable({ providedIn: 'root' })
 export class DevicesService {

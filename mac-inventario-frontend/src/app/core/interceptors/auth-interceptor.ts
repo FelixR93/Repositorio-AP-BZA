@@ -1,25 +1,24 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { AuthService } from '../services/auth';
 
-const TOKEN_KEY = 'bonanza_token';
 const API_BASE_URL = 'http://localhost:4000/api';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const platformId = inject(PLATFORM_ID);
-  const isBrowser = isPlatformBrowser(platformId);
 
-  // Solo aplica a tu API
-  const isApi = req.url.startsWith(API_BASE_URL);
-  if (!isApi) return next(req);
+  // SSR: no localStorage
+  if (!isPlatformBrowser(platformId)) return next(req);
 
-  // No meter token en login
-  if (req.url.includes('/auth/login')) return next(req);
+  // Solo tu API
+  if (!req.url.startsWith(API_BASE_URL)) return next(req);
 
-  // En servidor no hay localStorage
-  if (!isBrowser) return next(req);
+  // ✅ lee token desde TU AuthService (misma key bonanza_token)
+  const auth = inject(AuthService);
+  const token = auth.getToken();
 
-  const token = localStorage.getItem(TOKEN_KEY);
+  // Login/health sin token
   if (!token) return next(req);
 
   return next(

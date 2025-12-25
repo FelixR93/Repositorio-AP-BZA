@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { User } from '../models/user.model';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = 'http://127.0.0.1:4000/api';
 const TOKEN_KEY = 'bonanza_token';
 const USER_KEY = 'bonanza_user';
 

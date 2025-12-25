@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { User, UserRole } from '../models/user.model';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = 'http://127.0.0.1:4000/api';
 
 export type CreateUserDto = {
   fullName: string;

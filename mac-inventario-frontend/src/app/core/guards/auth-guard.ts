@@ -8,10 +8,10 @@ export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
   const platformId = inject(PLATFORM_ID);
 
-  // ✅ En SSR no redirigimos ni usamos storage; dejamos pasar render inicial
   if (!isPlatformBrowser(platformId)) return true;
 
-  if (auth.isLoggedIn()) return true;
+  const token = auth.getToken();
+  if (token && token.length > 10) return true;
 
   router.navigateByUrl('/login');
   return false;

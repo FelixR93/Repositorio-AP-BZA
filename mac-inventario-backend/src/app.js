@@ -15,29 +15,55 @@ const statsRoutes = require("./routes/stats.routes");
 
 const app = express();
 
-// ✅ Para obtener IP real si luego usas proxy (nginx, etc.)
+// Para obtener IP real si usas proxy (nginx, etc.)
 app.set("trust proxy", true);
 
-// CORS (ajusta CORS_ORIGIN si lo necesitas)
-app.use(cors({ origin: ENV.CORS_ORIGIN, credentials: true }));
+/* ======================================================
+   CORS para:
+   - Navegador: http://localhost:4200
+   - Navegador: http://127.0.0.1:4200
+   - Electron: file://  → origin viene undefined / null
+   ====================================================== */
+
+const allowedOrigins = new Set([
+  ENV.CORS_ORIGIN, // tu web normal (ej: http://localhost:4200)
+  "http://localhost:4200", // por si acaso
+]);
+
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      // ✅ Electron file:// → origin es null/undefined
+      if (!origin) return cb(null, true);
+
+      if (allowedOrigins.has(origin)) return cb(null, true);
+
+      return cb(new Error(`CORS bloqueado para origin: ${origin}`), false);
+    },
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json({ limit: "2mb" }));
 app.use(morgan("dev"));
 
-// ✅ Adjunta req.meta = { ip, userAgent }
+// Adjunta req.meta = { ip, userAgent }
 app.use(requestMeta);
 
 // Healthcheck
-app.get("/api/health", (_, res) => res.json({ ok: true, name: "Bonanza MAC Inventario API" }));
+app.get("/api/health", (_, res) =>
+  res.json({ ok: true, name: "Bonanza MAC Inventario API" })
+);
 
-// Rutas
+// Rutas API
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/aps", apsRoutes);
 app.use("/api/devices", devicesRoutes);
 app.use("/api/stats", statsRoutes);
 
-// Error handler al final (captura errores)
+// Error handler al final
 app.use(errorHandler);
 
 module.exports = app;
